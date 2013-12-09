@@ -50,10 +50,9 @@ class EpicsLogger():
             self._logger.info('Olog client created. url:' + str(url) +' user name:' + str(username))
             print 'Olog client created. url:' + str(url) + ' user name:' + str(username)
         except:
-            print 'Could not create client'
+            print 'Client could not be created'
             self._logger.warning('Unable to create Olog client')
             raise ValueError('Unable to create Olog Client')
-
     def getOlogClient(self):
         return self._ologClient
 
