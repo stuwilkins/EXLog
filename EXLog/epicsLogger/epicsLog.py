@@ -31,20 +31,28 @@ class EpicsLogger():
         self._name = None
         self._pythonLogger = None
         self._logMode = 'server'
-
+    
     def setLogMode(self,mode):
         if mode == 'local' or mode == 'server':
             self._logMode = mode
         else:
-            raise ValueError("Invalid log mode")
-
-    def isOlog(self):
-        if self._logMode == 'local':
-            raise Exception("Log level is set to local. Set level to server for using Olog functionalities")
-
+            raise ValueError("Invalid log mode")    
+        
     def isLocal(self):
         if self._logMode == 'server':
             raise Exception("Log level is set to server. Set level to local for using local logging functionalities")
+    
+    def isOlog(self):
+        if self._logMode == 'local':
+            raise Exception("Log level is set to local. Set level to server for using Olog functionalities")
+        
+    def isPythonLogger(self):
+        flag = None
+        if self._pythonLogger == None:
+            flag = False
+        else:
+            flag = True
+        return flag
 
     def createLogInstance(self):
         '''
@@ -56,7 +64,7 @@ class EpicsLogger():
         #if local, use createLocalLogger()
         #if local does not work either: finally raise exception
         pass
-
+    
     def createPythonLogger(self,name):
         '''
         Creates the local logging instance using native python formatter and handler
@@ -68,23 +76,17 @@ class EpicsLogger():
         hdlr.setFormatter(formatter)
         self._pythonLogger.addHandler(hdlr)
         self._pythonLogger.setLevel(logging.INFO)
-    
+        
     def createLocalLogger(self,name): 
         raise NotImplementedError("This has similar attributes to olog client a set of logbooks, tags and clients have to be generated.")
-
-    def getExistingPropObjects(self):
-        '''
-        Returns a list of existing property objects
-        '''
-        self._existingProperties=self._ologClient.listProperties()
-        return self._existingProperties
 
     def createOlogClient(self, name, url, username, password):
         '''
         Creates a local logger and Olog client. pythonLogger is a prerequisite for all logging. Once Olog client is successfully created, existing properties, tags, and logbooks are saved locally.
         '''
         self.isOlog()
-        self.createPythonLogger(name)
+        if (self.isPythonLogger() == False):
+            self.createPythonLogger(name)       
         try:
             self._ologClient = OlogClient(url, username, password)
             print self._ologClient
@@ -253,22 +255,29 @@ class EpicsLogger():
                 self._pythonLogger.warning('Cannot connect to Olog server to create Property')
             createSuccess = True
         return createSuccess
+    
+    def getExistingPropObjects(self):
+        '''
+        Returns a list of existing property objects
+        '''
+        self._existingProperties = self._ologClient.listProperties()
+        return self._existingProperties
 
     def listProperties(self):
         '''
         Returns a dictionary of properties and their attributes: {keys=Property Name,values=Attribute Names}
         '''
         return self._composePropAttDict()
-
+    
     def setName(self,name):
         '''
         Sets the name for epicsLogger Instance. In the future this can be changed to iterators.
         '''
         self._name = name
-
+    
     def getName(self):
         return self._name
-
+    
     def checkLogger(self):
         if (self._pythonLogger == None):
             raise  Exception("Logger has not been created. See createLogger() ")

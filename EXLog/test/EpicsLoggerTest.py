@@ -5,16 +5,14 @@ Created on Dec 11, 2013
 '''
 from pyOlog._conf import _conf
 from epicsLogger.epicsLog import EpicsLogger
+from pyOlog import OlogClient
 
 URL=_conf.get('user_config','url')
 USR=_conf.get('user_config','user')
 PSWD=_conf.get('user_config','password')
-# URL='crap'
-a=EpicsLogger()
-a.setName('arman')
-a.createOlogClient(name='arman', url=URL, username=USR, password=PSWD)
-a.retrieveLogbooks()
-print a._existingLogbooks
-a.createLogbook(newLogbook='TestLog.2', Owner="Operations")
-print a._existingLogbooks
-print a.queryLogbookObject(logBook='TestLog')
+URL = 'http://webdev.cs.nsls2.local:8080/Olog'
+
+
+logInstance = EpicsLogger()
+logInstance.createOlogClient(name = 'default', url = URL, username = USR, password = PSWD)
+# logInstance.createOlogClient(name = 'default2', url = URL, username = USR, password = PSWD)

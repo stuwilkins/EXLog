@@ -13,7 +13,6 @@ from _conf import _conf
 import json
 from requests import auth
 import logging
-from urllib import urlencode
 from collections import OrderedDict
 import tempfile
 
@@ -32,7 +31,7 @@ class OlogClient(object):
         '''
         Constructor
         '''
-        try:
+        try:     
             requests_log = logging.getLogger("requests")
             requests_log.setLevel(logging.DEBUG)
             self.__url = self.__getDefaultConfig('url', url)
@@ -45,7 +44,7 @@ class OlogClient(object):
             requests.get(self.__url + self.__tagsResource, verify=False, headers=self.__jsonheader).raise_for_status()
         except:
             raise
-
+    
     def __getDefaultConfig(self, arg, value):
         '''
         If Value is None, this will try to find the value in one of the configuration files
@@ -54,7 +53,7 @@ class OlogClient(object):
             return _conf.get('DEFAULT', arg)
         else:
             return value
-
+    
     def log(self, logEntry):
         '''
         create a logEntry
@@ -74,9 +73,9 @@ class OlogClient(object):
                                   files={'file':attachment.getFile()}
                                   )
             resp.raise_for_status()
-
-
-
+            
+            
+    
     def createLogbook(self, logbook):
         '''
         Create Logbook
@@ -86,8 +85,8 @@ class OlogClient(object):
                      verify=False,
                      headers=self.__jsonheader,
                      auth=self.__auth).raise_for_status()
-
-
+        
+        
     def createTag(self, tag):
         '''
         Create Tag
@@ -98,7 +97,7 @@ class OlogClient(object):
                      verify=False,
                      headers=self.__jsonheader,
                      auth=self.__auth).raise_for_status()
-
+        
     def createProperty(self, property):
         '''
         Create Property
@@ -110,44 +109,45 @@ class OlogClient(object):
                      verify=False,
                      headers=self.__jsonheader,
                      auth=self.__auth).raise_for_status()
-
+        
     def find(self, **kwds):
         '''
         Search for logEntries based on one or many search criteria
         >> find(search='*Timing*')
         find logentries with the text Timing in the description
-
+        
         >> find(tag='magnets')
         find log entries with the a tag named 'magnets'
-
+        
         >> find(logbook='controls')
         find log entries in the logbook named 'controls'
-
+        
         >> find(property='context')
         find log entires with property named 'context'
-
+        
         >> find(start=str(time.time() - 3600)
         find the log entries made in the last hour
         >> find(start=123243434, end=123244434)
         find all the log entries made between the epoc times 123243434 and 123244434
-
+        
         Searching using multiple criteria
         >>find(logbook='contorls', tag='magnets')
         find all the log entries in logbook 'controls' AND with tag named 'magnets'
         '''
         #search = '*' + text + '*'
-        query_string = self.__url + self.__logsResource + '?' + urlencode(OrderedDict(kwds))
+        query_string = self.__url + self.__logsResource
         resp = requests.get(query_string,
+                            params=OrderedDict(kwds),
                             verify=False,
                             headers=self.__jsonheader,
                             auth=self.__auth
                             )
         resp.raise_for_status()
         logs = []
-        for jsonLogEntry in resp.json():
+        for jsonLogEntry in resp.json():            
             logs.append(LogEntryDecoder().dictToLogEntry(jsonLogEntry))
         return logs
-
+    
     def listAttachments(self, logEntryId):
         '''
         Search for attachments on logentry _id_
@@ -168,8 +168,8 @@ class OlogClient(object):
             testFile.name = fileName
             testFile.write(f.content)
             attachments.append(Attachment(file=testFile))
-        return attachments
-
+        return attachments           
+    
     def listTags(self):
         '''
         List all tags.
@@ -183,7 +183,7 @@ class OlogClient(object):
         for jsonTag in resp.json().pop('tag'):
             tags.append(TagDecoder().dictToTag(jsonTag))
         return tags
-
+    
     def listLogbooks(self):
         '''
         List all logbooks
@@ -197,7 +197,7 @@ class OlogClient(object):
         for jsonLogbook in resp.json().pop('logbook'):
             logbooks.append(LogbookDecoder().dictToLogbook(jsonLogbook))
         return logbooks
-
+    
     def listProperties(self):
         '''
         List all Properties and their attributes
@@ -211,21 +211,21 @@ class OlogClient(object):
         for jsonProperty in resp.json().pop('property'):
             properties.append(PropertyDecoder().dictToProperty(jsonProperty))
         return properties
-
-
+            
+                        
     def delete(self, **kwds):
         '''
         Method to delete a logEntry, logbook, property, tag
         delete(logEntryId = int)
         >>> delete(logEntryId=1234)
-
+        
         delete(logbookName = String)
         >>> delete(logbookName = 'logbookName')
-
+        
         delete(tagName = String)
         >>> delete(tagName = 'myTag')
         # tagName = tag name of the tag to be deleted (it will be removed from all logEntries)
-
+        
         delete(propertyName = String)
         >>> delete(propertyName = 'position')
         # propertyName = property name of property to be deleted (it will be removed from all logEntries)
@@ -234,8 +234,8 @@ class OlogClient(object):
             self.__handleSingleDeleteParameter(**kwds)
         else:
             raise Exception, 'incorrect usage: Delete a single Logbook/tag/property'
-
-
+        
+        
     def __handleSingleDeleteParameter(self, **kwds):
         if 'logbookName' in kwds:
             requests.delete(self.__url + self.__logbooksResource + '/' + kwds['logbookName'].strip(),
@@ -249,7 +249,7 @@ class OlogClient(object):
                         headers=self.__jsonheader,
                         auth=self.__auth).raise_for_status()
             pass
-        elif 'propertyName' in kwds:
+        elif 'propertyName' in kwds:               
             requests.delete(self.__url + self.__propertiesResource + '/' + kwds['propertyName'].strip(),
                             data=PropertyEncoder().encode(Property(kwds['propertyName'].strip(), attributes={})),
                             verify=False,
@@ -266,7 +266,7 @@ class OlogClient(object):
             raise Exception, ' unkown key, use logEntryId, logbookName, tagName or propertyName'
 
 class PropertyEncoder(JSONEncoder):
-
+    
     def default(self, obj):
         if isinstance(obj, Property):
             test = {}
@@ -279,52 +279,52 @@ class PropertyEncoder(JSONEncoder):
         return json.JSONEncoder.default(self, obj)
 
 class PropertyDecoder(JSONDecoder):
-
+    
     def __init__(self):
         json.JSONDecoder.__init__(self, object_hook=self.dictToProperty)
-
+        
     def dictToProperty(self, d):
         if d:
             return Property(name=d.pop('name'), attributes=d.pop('attributes'))
-
+    
 class LogbookEncoder(JSONEncoder):
-
+    
     def default(self, obj):
         if isinstance(obj, Logbook):
             return {"name":obj.getName(), "owner":obj.getOwner()}
         return json.JSONEncoder.default(self, obj)
 
 class LogbookDecoder(JSONDecoder):
-
+    
     def __init__(self):
         json.JSONDecoder.__init__(self, object_hook=self.dictToLogbook)
-
+        
     def dictToLogbook(self, d):
         if d:
             return Logbook(name=d.pop('name'), owner=d.pop('owner'))
         else:
             return None
-
+        
 class TagEncoder(JSONEncoder):
-
+       
     def default(self, obj):
         if isinstance(obj, Tag):
             return {"state": obj.getState(), "name": obj.getName()}
         return json.JSONEncoder.default(self, obj)
-
+                
 class TagDecoder(JSONDecoder):
-
+    
     def __init__(self):
         json.JSONDecoder.__init__(self, object_hook=self.dictToTag)
-
+        
     def dictToTag(self, d):
         if d:
             return Tag(name=d.pop('name'), state=d.pop('state'))
         else:
             return None
-
+        
 class LogEntryEncoder(JSONEncoder):
-
+    
     def default(self, obj):
         if isinstance(obj, LogEntry):
             logbooks = []
@@ -345,10 +345,10 @@ class LogEntryEncoder(JSONEncoder):
         return json.JSONEncoder.default(self, obj)
 
 class LogEntryDecoder(JSONDecoder):
-
+    
     def __init__(self):
         json.JSONDecoder.__init__(self, object_hook=self.dictToLogEntry)
-
+        
     def dictToLogEntry(self, d):
         if d:
             return LogEntry(text=d.pop('description'),
