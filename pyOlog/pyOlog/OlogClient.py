@@ -221,7 +221,7 @@ class OlogClient(object):
 
         delete(logbookName = String)
         >>> delete(logbookName = 'logbookName')
-
+s://webdev.cs.nsls2
         delete(tagName = String)
         >>> delete(tagName = 'myTag')
         # tagName = tag name of the tag to be deleted (it will be removed from all logEntries)
