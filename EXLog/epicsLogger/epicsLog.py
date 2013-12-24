@@ -11,7 +11,7 @@ from pyOlog.OlogDataTypes import Attachment, Logbook, LogEntry, Property, Tag
 import logging
 from os import path
 #TO DO: Keep track of existing property inside a dictionary that as an attribute to class instance. append the newly created entries. this reduces the number of trips to the database
-
+#TO DO: Add regular expressions to queries.
 class EpicsLogger():
     '''
     classdocs
@@ -20,30 +20,30 @@ class EpicsLogger():
         '''
         Constructor
         '''
-        self._ologClient = None
-        self._ologLogbook = None
-        self._ologTag = None
-        self._ologProperty = None
-        self._existingProperties = dict()
-        self._existingAttributes = dict()
-        self._existingLogbooks = list()
-        self._ologEntry = None
-        self._name = None
-        self._pythonLogger = None
-        self._logMode = 'server'
+        self.__ologClient = None
+        self.__ologLogbook = None
+        self.__ologTag = None
+        self.__ologProperty = None
+        self.__existingProperties = dict()
+        self.__existingAttributes = dict()
+        self.__existingLogbooks = list()
+        self.__ologEntry = None
+        self.__name = None
+        self.__pythonLogger = None
+        self.__logMode = 'server'
 
     def setLogMode(self,mode):
         if mode == 'local' or mode == 'server':
-            self._logMode = mode
+            self.__logMode = mode
         else:
             raise ValueError("Invalid log mode")
 
     def isOlog(self):
-        if self._logMode == 'local':
+        if self.__logMode == 'local':
             raise Exception("Log level is set to local. Set level to server for using Olog functionalities")
 
     def isLocal(self):
-        if self._logMode == 'server':
+        if self.__logMode == 'server':
             raise Exception("Log level is set to server. Set level to local for using local logging functionalities")
 
     def createLogInstance(self):
@@ -62,22 +62,24 @@ class EpicsLogger():
         Creates the local logging instance using native python formatter and handler
         '''
         self.setName(name)
-        self._pythonLogger = logging.getLogger(name)
+        self.__pythonLogger = logging.getLogger(name)
         hdlr = logging.FileHandler(path.expanduser('~/' + str(name) + '.log'))
         formatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s')
         hdlr.setFormatter(formatter)
-        self._pythonLogger.addHandler(hdlr)
-        self._pythonLogger.setLevel(logging.INFO)
+        self.__pythonLogger.addHandler(hdlr)
+        self.__pythonLogger.setLevel(logging.INFO)
     
     def createLocalLogger(self,name): 
-        raise NotImplementedError("This has similar attributes to olog client a set of logbooks, tags and clients have to be generated.")
+        #TODO: create a default user for machine based logging into a local file. Later this file needs to be parsable
+        raise NotImplementedError("This has similar attributes to olog client a set of logbooks, "
+                                  "tags and clients have to be generated.")
 
-    def getExistingPropObjects(self):
+    def retrieveExistingPropObjects(self):
         '''
         Returns a list of existing property objects
         '''
-        self._existingProperties=self._ologClient.listProperties()
-        return self._existingProperties
+        self.__existingProperties=self.__ologClient.listProperties()
+        return self.__existingProperties
 
     def createOlogClient(self, name, url, username, password):
         '''
@@ -86,19 +88,19 @@ class EpicsLogger():
         self.isOlog()
         self.createPythonLogger(name)
         try:
-            self._ologClient = OlogClient(url, username, password)
-            print self._ologClient
-            self._pythonLogger.info('Olog client created. url:' + str(url) +' user name:' + str(username))
+            self.__ologClient = OlogClient(url, username, password)
+            print self.__ologClient
+            self.__pythonLogger.info('Olog client created. url:' + str(url) +' user name:' + str(username))
             print 'Olog client created. url:' + str(url) + ' user name:' + str(username)
-            self._existingLogbooks = self. _composeLogbookList()
+            self.__existingLogbooks = self. __composeLogbookList()
         except:
             print 'Client could not be created'
             logModeResp = raw_input('Connection to Olog Server is not successful. Logging Mode Local?[y/n]')
             if logModeResp == 'y':
                 self.setLogMode('local')
             else:
-                self._pythonLogger.warning('Unable to create Olog client')
-                raise ValueError('Unable to create Olog Client')
+                self.__pythonLogger.warning('Unable to create Olog client')
+            raise
                 
     def retrieveLogbooks(self):
         '''
@@ -106,13 +108,14 @@ class EpicsLogger():
         '''
         self.isOlog()
         logbookObjects = list()
-        self._existingLogbooks = list()
+        self.__existingLogbooks = list()
         try:
-            logbookObjects = self._ologClient.listLogbooks()
+            logbookObjects = self.__ologClient.listLogbooks()
             for entry in logbookObjects:
-                self._existingLogbooks.append(entry.getName())
+                self.__existingLogbooks.append(entry.getName())
+            return self.__existingLogbooks
         except:
-            self._pythonLogger.warning('Olog logbooks cannot be accessed')
+            self.__pythonLogger.warning('Olog logbooks cannot be accessed')
             raise Exception('Olog logbooks cannot be accessed')
         
     def createLogbook(self,newLogbook,Owner):
@@ -121,49 +124,62 @@ class EpicsLogger():
         '''
         self.isOlog()
         self.retrieveLogbooks()
-        print self._existingLogbooks
-        if newLogbook in self._existingLogbooks:
-            self._pythonLogger.info('Olog Logbook ' + str(newLogbook) + ' exists')
+        print self.__existingLogbooks
+        if newLogbook in self.__existingLogbooks:
+            self.__pythonLogger.info('Olog Logbook ' + str(newLogbook) + ' exists')
             print 'Olog Logbook ' + str(newLogbook) + ' exists'
         else:
-            self._ologLogbook = Logbook(name = newLogbook, owner = Owner)
+            self.__ologLogbook = Logbook(name = newLogbook, owner = Owner)
             try:
-                self._ologClient.createLogbook(self._ologLogbook)
-                self._existingLogbooks.append(self._ologLogbook.getName())
+                self.__ologClient.createLogbook(self.__ologLogbook)
+                self.__existingLogbooks.append(self.__ologLogbook.getName())
             except:
-                self._pythonLogger.warning('Olog Logbook cannot be created')
-                raise Exception('Olog Logbook cannot be created')
-        self._ologLogbook = newLogbook
+                self.__pythonLogger.warning('Olog Logbook cannot be created')
+                raise
+        self.__ologLogbook = newLogbook
+
+    def retrieveLogbookObject(self,name):
+        logbook_objects = self.__ologClient.listLogbooks()
+        queried_object = None
+        for entry in logbook_objects:
+            try:
+                if name == entry.getName():
+                    queried_object = entry
+                    break
+            except:
+                raise
+        if queried_object is None:
+            raise ValueError('Queried LogBook does not exist')
+        return queried_object
 
     def queryLogbookObject(self,logBook):
         """
-        Returns Olog Logbook object for a given lobBook name
+        Returns Olog Logbook object for a given "LogBook Name"
         """
+        find_success = False
         queriedLogbook = None
-        try:
-            logbookList = self._ologClient.listLogbooks()
-        except:
-            raise Exception("Olog Tags are not accessible. Check your Olog client configuration")
-        for entry in logbookList:
+        self.retrieveLogbooks()
+        for entry in self.__existingLogbooks:
             if entry.getName() == logBook:
                 queriedLogbook = entry
+                find_success = True
                 break
-        if queriedLogbook==None:
+        if queriedLogbook is None:
             print 'Queried Logbook does not exist'
             raise ValueError('Queried Logbook does not exist')
-        return queriedLogbook
+        return find_success
 
-    def _composeLogbookList(self):
+    def __composeLogbookList(self):
         '''
         Compose a list of Logbook objects on Olog Server.
         '''
         logbookObjects = list()
         try:
-            logbookObjects = self._ologClient.listLogbooks()
+            logbookObjects = self.__ologClient.listLogbooks()
         except:
-            self._logLevel = 'local'
+            self.__logLevel = 'local'
             print "Logging Mode:"
-            self._pythonLogger.warning('Olog logbooks cannot be accessed')
+            self.__pythonLogger.warning('Olog logbooks cannot be accessed')
         return logbookObjects
 
     def createTag(self,newTagName,newTagState):
@@ -174,23 +190,23 @@ class EpicsLogger():
         tagList = list()
         tagObjects = list()
         try:
-            tagObjects = self._ologClient.listTags()
+            tagObjects = self.__ologClient.listTags()
         except:
-            self._pythonLogger.warning('Olog tags cannot be accessed')
+            self.__pythonLogger.warning('Olog tags cannot be accessed')
             raise Exception('Olog tags cannot be accessed')
         for entry in tagObjects:
             tagList.append(entry.getName())
         if newTagName in tagList:
-            self._pythonLogger.info('Olog Tag' + str(newTagName) + ' has already been created')
+            self.__pythonLogger.info('Olog Tag' + str(newTagName) + ' has already been created')
             print 'Olog Tag ' + str(newTagName) + ' has already been created'
         else:
-            self._ologTag = Tag(name = newTagName, state = newTagState)
+            self.__ologTag = Tag(name = newTagName, state = newTagState)
             try:
-                self._ologClient.createTag(self._ologTag)
-                self._pythonLogger.warning('Olog Tag can not be created')
+                self.__ologClient.createTag(self.__ologTag)
+                self.__pythonLogger.warning('Olog Tag can not be created')
             except:
                 raise Exception('Olog Tag can not be created')
-        self._ologTag = newTagName
+        self.__ologTag = newTagName
 
     def queryTagObject(self, tag):
         """
@@ -198,7 +214,7 @@ class EpicsLogger():
         """
         queriedTag = None
         try:
-            tagList = self._ologClient.listTags()
+            tagList = self.__ologClient.listTags()
         except:
             raise Exception("Olog Tags are not accessible!")
         for entry in tagList:
@@ -215,21 +231,21 @@ class EpicsLogger():
         Returns "None" if user does not want to enter new property name.
         Returns new user defined "property name" if name was in use
         '''
-        propDict = self._composePropAttDict()
+        propDict = self.__composePropAttDict()
         if propDict.has_key(name):
             renameResp = raw_input("The name suggested for new Property exists. Rename[y/n]")
             if renameResp=='y':
                 name = raw_input('Prop Name: ')
             else:
-                name = None
-        return  name
+                name == None
+        return name
 
-    def _composePropAttDict(self):
+    def __composePropAttDict(self):
         '''
         Returns a dictionary where property names are the "keys" and values are attribute names
         '''
         paDict = dict()
-        propObjects = self.getExistingPropObjects()
+        propObjects = self.retrieveExistingPropObjects()
         for entry in propObjects:
             paDict[entry.getName()] = entry.getAttributeNames()
         return paDict
@@ -247,10 +263,10 @@ class EpicsLogger():
         else:
             prop = Property(name = property_name, attributes = kwargs)
             try:
-                self._ologClient.createProperty(prop)
+                self.__ologClient.createProperty(prop)
             except:
                 raise Exception('Cannot connect to Olog server to create Olog Property')
-                self._pythonLogger.warning('Cannot connect to Olog server to create Property')
+                self.__pythonLogger.warning('Cannot connect to Olog server to create Property')
             createSuccess = True
         return createSuccess
 
@@ -264,11 +280,11 @@ class EpicsLogger():
         '''
         Sets the name for epicsLogger Instance. In the future this can be changed to iterators.
         '''
-        self._name = name
+        self.__name = name
 
     def getName(self):
-        return self._name
+        return self.__name
 
     def checkLogger(self):
-        if (self._pythonLogger == None):
+        if (self.__pythonLogger == None):
             raise  Exception("Logger has not been created. See createLogger() ")
