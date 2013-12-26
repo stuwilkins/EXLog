@@ -28,7 +28,7 @@ class TestCreateRemoteOlogData(unittest.TestCase):
 
     def setUp(self):
         self.logInstance = EpicsLogger()
-        self.logInstance.setLogMode(mode = 'server')
+        self.logInstance.setLogMode(mode = 'remote')
         self.logInstance.createOlogClient(name = 'unit tester', url = URL, username = USR, password = PSWD)
 
     def testCreateRemoteTag(self):
@@ -44,34 +44,11 @@ class TestCreateRemoteOlogData(unittest.TestCase):
 if __name__ == '__main__':
     unittest.main()
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 # a = OlogClient(URL, USR, PSWD)
 # tag = Tag(name='1st', state="Active")
 # a.createTag(tag)
 # log = Logbook(name='Trial', owner='unittest')
-# a.createLogbook(log)
+# # a.createLogbook(log)
 # a=EpicsLogger()
 # a.setName('arman')
 # a.createOlogClient(name='arman', url=URL, username=USR, password=PSWD)
