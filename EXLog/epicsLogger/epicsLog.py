@@ -121,14 +121,13 @@ class EpicsLogger():
             self.__composeTagList()
             self.__composePropList()
         except:
+            print 'Client could not be created'
+            logModeResp = raw_input('Connection to Olog Server is not successful. Logging Mode Local?[y/n]')
+            if logModeResp == 'y':
+                self.setLogMode('local')
+            else:
+                self.__pythonLogger.warning('Unable to create Olog client')
             raise
-#             print 'Client could not be created'
-#             logModeResp = raw_input('Connection to Olog Server is not successful. Logging Mode Local?[y/n]')
-#             if logModeResp == 'y':
-#                 self.setLogMode('local')
-#             else:
-#                 self.__pythonLogger.warning('Unable to create Olog client')
-#             
 
 
     def find(self, **kwds):
@@ -344,7 +343,7 @@ class EpicsLogger():
         Returns a list of existing property objects
         '''
         self.__existingProperties=self.__ologClient.listProperties()
-        return sradelf.__existingProperties
+        return self.__existingProperties
 
     def __composePropAttDict(self):
         '''
