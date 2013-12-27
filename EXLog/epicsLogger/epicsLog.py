@@ -121,13 +121,14 @@ class EpicsLogger():
             self.__composeTagList()
             self.__composePropList()
         except:
-            print 'Client could not be created'
-            logModeResp = raw_input('Connection to Olog Server is not successful. Logging Mode Local?[y/n]')
-            if logModeResp == 'y':
-                self.setLogMode('local')
-            else:
-                self.__pythonLogger.warning('Unable to create Olog client')
             raise
+#             print 'Client could not be created'
+#             logModeResp = raw_input('Connection to Olog Server is not successful. Logging Mode Local?[y/n]')
+#             if logModeResp == 'y':
+#                 self.setLogMode('local')
+#             else:
+#                 self.__pythonLogger.warning('Unable to create Olog client')
+#             
 
 
     def find(self, **kwds):
@@ -287,10 +288,10 @@ class EpicsLogger():
             try:
                 self.__ologClient.createTag(self.__ologTag)
                 self.__pythonLogger.warning('Olog Tag can not be created')
+                self.__existingTags.append(self.__ologTag.getName())
             except:
                 raise Exception('Olog Tag can not be created')
-        self.__ologTag = newTagName
-        self.__existingTags.append(self.__ologTag.getName())
+        
 
     def queryTagObject(self, tag):
         """
@@ -359,7 +360,7 @@ class EpicsLogger():
         temp_prop = list()
         try:
             prop_objects = self.__ologClient.listProperties()
-            temp_prop = list
+            temp_prop = list()
             for entry in prop_objects:
                 temp_prop.append(entry.getName())
         except:

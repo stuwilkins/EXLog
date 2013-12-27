@@ -10,7 +10,9 @@ URL=_conf.get('user_config','url')
 USR=_conf.get('user_config','user')
 PSWD=_conf.get('user_config','password')
 
-URL = "http://localhost:8080/Olog"
+# URL = "http://localhost:8080/Olog
+
+print URL
 
 class TestCreateClient(unittest.TestCase):
 
