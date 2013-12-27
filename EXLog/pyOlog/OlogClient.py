@@ -15,6 +15,9 @@ from requests import auth
 import logging
 from collections import OrderedDict
 import tempfile
+from requests.adapters import HTTPAdapter
+from requests.packages.urllib3.poolmanager import PoolManager
+import ssl
 
 class OlogClient(object):
     '''
@@ -41,7 +44,10 @@ class OlogClient(object):
                 self.__auth = auth.HTTPBasicAuth(username, password)
             else:
                 self.__auth = None
-            requests.get(self.__url + self.__tagsResource, verify=True, headers=self.__jsonheader).raise_for_status()
+            s = requests.Session()
+            s.mount('https://', SSLAdapter(ssl_version=ssl.PROTOCOL_SSLv3))
+            # s.get(self.__url + self.__tagsResource, verify=False, headers=self.__jsonheader).raise_for_status()
+            requests.get(self.__url + self.__tagsResource, verify=False, headers=self.__jsonheader).raise_for_status()
         except:
             raise
     
@@ -58,7 +64,9 @@ class OlogClient(object):
         '''
         create a logEntry
         '''
-        resp = requests.post(self.__url + self.__logsResource,
+        s = requests.Session()
+        s.mount('https://', SSLAdapter(ssl_version=ssl.PROTOCOL_SSLv3))
+        resp = s.post(self.__url + self.__logsResource,
                      data=LogEntryEncoder().encode(logEntry),
                      verify=False,
                      headers=self.__jsonheader,
@@ -67,7 +75,7 @@ class OlogClient(object):
         id = LogEntryDecoder().dictToLogEntry(resp.json()[0]).getId()
         '''Attachments'''
         for attachment in logEntry.getAttachments():
-            resp = requests.post(self.__url + self.__attachmentResource +'/'+ str(id),
+            resp = s.post(self.__url + self.__attachmentResource +'/'+ str(id),
                                   verify=False,
                                   auth=self.__auth,
                                   files={'file':attachment.getFile()}
@@ -80,37 +88,48 @@ class OlogClient(object):
         '''
         Create Logbook
         '''
+        s = requests.Session()
+        s.mount('https://', SSLAdapter(ssl_version=ssl.PROTOCOL_SSLv3))
         requests.put(self.__url + self.__logbooksResource + '/' + logbook.getName(),
-                     data=LogbookEncoder().encode(logbook),
-                     verify=False,
-                     headers=self.__jsonheader,
-                     auth=self.__auth).raise_for_status()
+                         data=LogbookEncoder().encode(logbook),
+                         verify=False,
+                         allow_redirects=True,
+                         headers=self.__jsonheader,
+                         auth=self.__auth).raise_for_status()
+        print s.put(self.__url + self.__logbooksResource + '/' + logbook.getName(),
+                         data=LogbookEncoder().encode(logbook),
+                         verify=False,
+                         allow_redirects=True,
+                         headers=self.__jsonheader,
+                         auth=self.__auth).raise_for_status()
         
         
     def createTag(self, tag):
         '''
         Create Tag
         '''
+        s = requests.Session()
+        s.mount('https://', SSLAdapter(ssl_version=ssl.PROTOCOL_SSLv3))
         url = self.__url + self.__tagsResource + '/' + tag.getName()
-        requests.put(url,
-                     data=TagEncoder().encode(tag),
-                     verify=False,
-                     headers=self.__jsonheader,
-                     auth=self.__auth).raise_for_status()
+        s.put(url,data=TagEncoder().encode(tag),
+                verify=False,
+                headers=self.__jsonheader,
+                auth=self.__auth).raise_for_status()
         
     def createProperty(self, property):
         '''
         Create Property
         '''
+        s = requests.Session()
+        s.mount('https://', SSLAdapter(ssl_version=ssl.PROTOCOL_SSLv3))
         url = self.__url + self.__propertiesResource + '/' + property.getName()
         p = PropertyEncoder().encode(property)
-        requests.put(url,
-                     data=PropertyEncoder().encode(property),
-                     verify=False,
-                     headers=self.__jsonheader,
-                     auth=self.__auth).raise_for_status()
+        s.put(url,data=PropertyEncoder().encode(property),
+                 verify=False,
+                 headers=self.__jsonheader,
+                 auth=self.__auth).raise_for_status()
         
-    def find(self, **kwds):
+    def find_logEntries(self, **kwds):
         '''
         Search for logEntries based on one or many search criteria
         >> find(search='*Timing*')
@@ -135,13 +154,14 @@ class OlogClient(object):
         find all the log entries in logbook 'controls' AND with tag named 'magnets'
         '''
         #search = '*' + text + '*'
+        s = requests.Session()
+        s.mount('https://', SSLAdapter(ssl_version=ssl.PROTOCOL_SSLv3))
         query_string = self.__url + self.__logsResource
-        resp = requests.get(query_string,
-                            params=OrderedDict(kwds),
-                            verify=False,
-                            headers=self.__jsonheader,
-                            auth=self.__auth
-                            )
+        resp = s.get(query_string,
+                     params=OrderedDict(kwds),
+                     verify=False,
+                     headers=self.__jsonheader,
+                     auth=self.__auth)
         resp.raise_for_status()
         logs = []
         for jsonLogEntry in resp.json():            
@@ -152,14 +172,16 @@ class OlogClient(object):
         '''
         Search for attachments on logentry _id_
         '''
-        resp = requests.get(self.__url+self.__attachmentResource+'/'+str(logEntryId),
+        s = requests.Session()
+        s.mount('https://', SSLAdapter(ssl_version=ssl.PROTOCOL_SSLv3))
+        resp = s.get(self.__url+self.__attachmentResource+'/'+str(logEntryId),
                          verify=False,
                          headers=self.__jsonheader)
         resp.raise_for_status()
         attachments = []
         for jsonAttachment in resp.json().pop('attachment'):
             fileName = jsonAttachment.pop('fileName')
-            f = requests.get(self.__url+
+            f = s.get(self.__url+
                              self.__attachmentResource+'/'+
                              str(logEntryId)+'/'+
                              fileName,
@@ -174,7 +196,9 @@ class OlogClient(object):
         '''
         List all tags.
         '''
-        resp = requests.get(self.__url + self.__tagsResource,
+        s = requests.Session()
+        s.mount('https://', SSLAdapter(ssl_version=ssl.PROTOCOL_SSLv3))
+        resp = s.get(self.__url + self.__tagsResource,
                             verify=False,
                             headers=self.__jsonheader,
                             auth=self.__auth)
@@ -188,7 +212,9 @@ class OlogClient(object):
         '''
         List all logbooks
         '''
-        resp = requests.get(self.__url + self.__logbooksResource,
+        s = requests.Session()
+        s.mount('https://', SSLAdapter(ssl_version=ssl.PROTOCOL_SSLv3))
+        resp = s.get(self.__url + self.__logbooksResource,
                             verify=False,
                             headers=self.__jsonheader,
                             auth=self.__auth)
@@ -202,7 +228,9 @@ class OlogClient(object):
         '''
         List all Properties and their attributes
         '''
-        resp = requests.get(self.__url + self.__propertiesResource,
+        s = requests.Session()
+        s.mount('https://', SSLAdapter(ssl_version=ssl.PROTOCOL_SSLv3))
+        resp = s.get(self.__url + self.__propertiesResource,
                             verify=False,
                             headers=self.__jsonheader,
                             auth=self.__auth)
@@ -237,33 +265,35 @@ class OlogClient(object):
         
         
     def __handleSingleDeleteParameter(self, **kwds):
+        s = requests.Session()
+        s.mount('https://', SSLAdapter(ssl_version=ssl.PROTOCOL_SSLv3))
         if 'logbookName' in kwds:
-            requests.delete(self.__url + self.__logbooksResource + '/' + kwds['logbookName'].strip(),
+            s.delete(self.__url + self.__logbooksResource + '/' + kwds['logbookName'].strip(),
                         verify=False,
                         headers=self.__jsonheader,
                         auth=self.__auth).raise_for_status()
             pass
         elif 'tagName' in kwds:
-            requests.delete(self.__url + self.__tagsResource + '/' + kwds['tagName'].strip(),
+            s.delete(self.__url + self.__tagsResource + '/' + kwds['tagName'].strip(),
                         verify=False,
                         headers=self.__jsonheader,
                         auth=self.__auth).raise_for_status()
             pass
         elif 'propertyName' in kwds:               
-            requests.delete(self.__url + self.__propertiesResource + '/' + kwds['propertyName'].strip(),
+            s.delete(self.__url + self.__propertiesResource + '/' + kwds['propertyName'].strip(),
                             data=PropertyEncoder().encode(Property(kwds['propertyName'].strip(), attributes={})),
                             verify=False,
                             headers=self.__jsonheader,
                             auth=self.__auth).raise_for_status()
             pass
         elif 'logEntryId' in kwds:
-            requests.delete(self.__url + self.__logsResource + '/' + str(kwds['logEntryId']).strip(),
+            s.delete(self.__url + self.__logsResource + '/' + str(kwds['logEntryId']).strip(),
                             verify=False,
                             headers=self.__jsonheader,
                             auth=self.__auth).raise_for_status()
             pass
         else:
-            raise Exception, ' unkown key, use logEntryId, logbookName, tagName or propertyName'
+            raise Exception('Unkown key, use logEntryId, logbookName, tagName or propertyName')
 
 class PropertyEncoder(JSONEncoder):
     
@@ -361,3 +391,16 @@ class LogEntryDecoder(JSONDecoder):
                             modifyTime=d.pop('modifiedDate'))
         else:
             return None
+
+class SSLAdapter(HTTPAdapter):
+    '''An HTTPS Transport Adapter that uses an arbitrary SSL version.'''
+    def __init__(self, ssl_version=None, **kwargs):
+        self.ssl_version = ssl_version
+
+        super(SSLAdapter, self).__init__(**kwargs)
+
+    def init_poolmanager(self, connections, maxsize, block=False):
+        self.poolmanager = PoolManager(num_pools=connections,
+                                       maxsize=maxsize,
+                                       block=block,
+                                       ssl_version=self.ssl_version)

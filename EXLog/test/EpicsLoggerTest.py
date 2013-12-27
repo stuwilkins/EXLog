@@ -28,17 +28,56 @@ class TestCreateRemoteOlogData(unittest.TestCase):
 
     def setUp(self):
         self.logInstance = EpicsLogger()
-        self.logInstance.setLogMode(mode = 'remote')
-        self.logInstance.createOlogClient(name = 'unit tester', url = URL, username = USR, password = PSWD)
+        self.logInstance.setLogMode(mode='remote')
+        self.logInstance.createOlogClient(name='unit tester', url=URL, username=USR, password=PSWD)
 
     def testCreateRemoteTag(self):
         try:
-            self.logInstance.createTag(newTagName = 'unit test tag' , newTagState = 'Active')
+            self.logInstance.createTag(newTagName='unit test tag' , newTagState='Active')
         except:
             raise
 
     def testCreateRemoteLogBook(self):
         pass
+
+    def testCreateRemoteProperty(self):
+        pass
+
+    def testCreateRemoteLogEntry(self):
+        pass
+
+class TestQueryRemoteOlogData(unittest.TestCase):
+
+    def setUp(self):
+        self.logInstance = EpicsLogger()
+        self.logInstance.setLogMode(mode='remote')
+        self.logInstance.createOlogClient(name='unit tester', url=URL, username=USR, password=PSWD)
+
+
+    def testQueryOlogClient(self):
+        pass
+
+    def testQueryLogbook(self):
+        pass
+
+    def testQueryTag(self):
+        pass
+
+    def testQueryPropery(self):
+        pass
+
+    def testQueryLogEntry(self):
+        pass
+
+class TestQueryRemoteLogEntries(unittest.TestCase):
+
+    def setUp(self):
+        pass
+
+    def testCreateLogWithAttachments(self):
+        pass
+
+
 
 
 if __name__ == '__main__':
