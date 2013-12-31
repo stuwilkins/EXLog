@@ -9,9 +9,9 @@ incorrect_url1 = 'http://incorrect_URL'
 incorrect_url2 = 'incorrect_URL'
 incorrect_usr = 'incorrect tester'
 incorrect_pswd = 'None'
-
+print URL
 #URL = "http://localhost:8080/Olog"
-#URL2 = "https://localhost:8181/Olog"
+# URL2 = "https://localhoest:8181/Olog"
 logInst = EpicsLogger()
 #logInst2 = EpicsLogger()
 # logInst.createOlogClient('test client', URL, USR, PSWD)
@@ -29,7 +29,7 @@ logInst = EpicsLogger()
 logInst.createOlogClient(name = 'Unit tester', url = URL, username = incorrect_usr, password = PSWD)
 
 # # print logInst.queryLogbook(logBook='simple_testz')
-# logInst.createTag(newTagName='Septums', newTagState='Active')
+logInst.createTag(newTagName='Septums', newTagState='Active')
 # logInst.createTag(newTagName='test_tag', newTagState='Active')
 # print logInst.retrieveTags()
 # print logInst.queryTags(tag='ARMs')

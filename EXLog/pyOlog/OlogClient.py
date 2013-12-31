@@ -47,7 +47,7 @@ class OlogClient(object):
             s = requests.Session()
             s.mount('https://', SSLAdapter(ssl_version=ssl.PROTOCOL_SSLv3))
             # s.get(self.__url + self.__tagsResource, verify=False, headers=self.__jsonheader).raise_for_status()
-            requests.get(self.__url + self.__tagsResource, verify=False, headers=self.__jsonheader).raise_for_status()
+            s.get(self.__url + self.__tagsResource, verify=False, headers=self.__jsonheader).raise_for_status()
         except:
             raise
     

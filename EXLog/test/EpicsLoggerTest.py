@@ -13,7 +13,7 @@ USR=_conf.get('user_config','user')
 PSWD=_conf.get('user_config','password')
 
 # URL = "http://localhost:8080/Olog
-
+print URL
 class TestSetLogEnvironment(unittest.TestCase):
     
     def setUp(self):
