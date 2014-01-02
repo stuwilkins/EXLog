@@ -165,6 +165,27 @@ class EpicsLogger():
         return log_entries
         pass
 
+    def delete(self, **kwds):
+        '''
+        Method to delete a logEntry, logbook, property, tag
+        delete(logEntryId = int)
+        >>> delete(logEntryId=1234)
+
+        delete(logbookName = String)
+        >>> delete(logbookName = 'logbookName')
+
+        delete(tagName = String)
+        >>> delete(tagName = 'myTag')
+        # tagName = tag name of the tag to be deleted (it will be removed from all logEntries)
+
+        delete(propertyName = String)
+        >>> delete(propertyName = 'position')
+        # propertyName = property name of property to be deleted (it will be removed from all logEntries)
+        '''
+        self.isOlog()
+        self.is_ologClient()
+        self.__ologClient.delete(**kwds)
+
     def retrieveOlogClient(self):
         '''
         Returns OlogClient object created. Useful for calling native pyOlog routines
@@ -260,27 +281,27 @@ class EpicsLogger():
         return logbookNames
     
     
-    def createTag(self, newTagName, newTagState):
+    def createTag(self, newTagName):
         '''
         Creates an Olog tag.
         '''
+        newTagState = 'Active'
         self.isOlog()
         self.is_ologClient()
-        tagList = list()
-        tagObjects = list()
+        tag_list = list()
         try:
             tagObjects = self.__ologClient.listTags()
         except:
             self.__pythonLogger.warning('Olog tags cannot be accessed')
             raise Exception('Olog tags cannot be accessed')
         for entry in tagObjects:
-            tagList.append(entry.getName())
-        if newTagName in tagList:
+            tag_list.append(entry.getName())
+        if newTagName in tag_list:
             self.__pythonLogger.info('Olog Tag' + str(newTagName) + ' has already been created')
             print 'Olog Tag ' + str(newTagName) + ' has already been created'
             self.__ologTag = self.__retrieveTagObject(name=newTagName)
         else:
-            self.__ologTag = Tag(name = newTagName, state = newTagState)
+            self.__ologTag = Tag(name=newTagName, state=newTagState)
             try:
                 self.__ologClient.createTag(self.__ologTag)
                 self.__existingTags.append(self.__ologTag.getName())
