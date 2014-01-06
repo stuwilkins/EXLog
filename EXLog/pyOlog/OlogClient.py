@@ -90,13 +90,13 @@ class OlogClient(object):
         '''
         s = requests.Session()
         s.mount('https://', SSLAdapter(ssl_version=ssl.PROTOCOL_SSLv3))
-        requests.put(self.__url + self.__logbooksResource + '/' + logbook.getName(),
+        s.put(self.__url + self.__logbooksResource + '/' + logbook.getName(),
                          data=LogbookEncoder().encode(logbook),
                          verify=False,
                          allow_redirects=True,
                          headers=self.__jsonheader,
                          auth=self.__auth).raise_for_status()
-        print s.put(self.__url + self.__logbooksResource + '/' + logbook.getName(),
+        s.put(self.__url + self.__logbooksResource + '/' + logbook.getName(),
                          data=LogbookEncoder().encode(logbook),
                          verify=False,
                          allow_redirects=True,

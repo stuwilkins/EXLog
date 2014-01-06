@@ -13,9 +13,11 @@ USR=_conf.get('user_config','user')
 PSWD=_conf.get('user_config','password')
 
 # URL = "http://localhost:8080/Olog
-print URL
-class TestSetLogEnvironment(unittest.TestCase):
 
+class TestSetLogEnvironment(unittest.TestCase):
+    """
+    Unit test obtains URL, user name, and password information from pyOlog.conf file.
+    """
     def setUp(self):
         self.logInstance = EpicsLogger()
 
@@ -54,7 +56,7 @@ class TestSetLogEnvironment(unittest.TestCase):
         self.assertRaises(requests.exceptions.ConnectionError, self.logInstance.createOlogClient, 'unit tester', incorrect_url1, incorrect_usr, incorrect_pswd)
         self.assertRaises(requests.exceptions.MissingSchema, self.logInstance.createOlogClient, 'unit tester', incorrect_url2, incorrect_usr, incorrect_pswd)
         self.logInstance.createOlogClient(name='Unit tester', url = URL, username = incorrect_usr, password = PSWD)
-        self.assertRaises(requests.exceptions.SSLError, self.logInstance.createLogbook, sample_logbookName, sample_logbookOwner)
+        # self.assertRaises(requests.exceptions.SSLError, self.logInstance.createLogbook, sample_logbookName, sample_logbookOwner)
 
     def testCreateLocalClient(self):
         """
@@ -81,8 +83,10 @@ class TestCreateRemoteOlogData(unittest.TestCase):
             self.logInstance.createTag(newTagName='unit test tag')
         except:
             raise
-        self.logInstance.delete(tagName='unit test tag')
-        #clean the tag once done : set state to inactive
+        self.assertTrue(self.logInstance.queryTags(tag='unit test tag'),'Tag create failure not detected')
+        self.assertEqual(self.logInstance.createTag(newTagName='unit test tag'),
+                         'Olog Tag unit test tag has already been created',
+                         'Attempt to avoid create existing tag failed')
 
     def testCreateRemoteLogBook(self):
         """
@@ -90,13 +94,27 @@ class TestCreateRemoteOlogData(unittest.TestCase):
             Try creating a logbook with a random unique name
             Try creating an existing logbook
         """
-        pass
+        try:
+            self.logInstance.createLogbook(newLogbook='unit test logbook', Owner='unit tester')
+        except:
+            raise
+        self.logInstance.createLogbook(newLogbook='unit test logbook',
+                        Owner='unit tester')
+        self.assertEqual(self.logInstance.createLogbook(newLogbook='unit test logbook',
+                        Owner='unit tester'),
+                        'Olog Logbook unit test logbook exists',
+                        'Attempt to avoid create existing tag failed')
 
     def testCreateRemoteProperty(self):
         pass
 
     def testCreateRemoteLogEntry(self):
         pass
+
+    def tearDown(self):
+        self.logInstance.delete(tagName='unit test tag')
+        self.logInstance.delete(logbookName='unit test logbook')
+
 
 class TestQueryRemoteOlogData(unittest.TestCase):
 
@@ -120,6 +138,7 @@ class TestQueryRemoteOlogData(unittest.TestCase):
 
     def testQueryLogEntry(self):
         pass
+
 
 class TestQueryRemoteLogEntries(unittest.TestCase):
 

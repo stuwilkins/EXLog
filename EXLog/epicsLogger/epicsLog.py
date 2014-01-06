@@ -185,6 +185,7 @@ class EpicsLogger():
         self.isOlog()
         self.is_ologClient()
         self.__ologClient.delete(**kwds)
+        return 'yay'
 
     def retrieveOlogClient(self):
         '''
@@ -206,21 +207,22 @@ class EpicsLogger():
         '''
         self.isOlog()
         self.is_ologClient()
-        print self.__existingLogbooks
+        self.__is_pyLogger()
+        used_logbook = None
+        self.__existingLogbooks = self.retrieveLogbooks()
         if newLogbook in self.__existingLogbooks:
             self.__pythonLogger.info('Olog Logbook ' + str(newLogbook) + ' exists')
-            print 'Olog Logbook ' + str(newLogbook) + ' exists'
             self.__ologLogbook = self.__retrieveLogbookObject(name=newLogbook)
+            return 'Olog Logbook ' + str(newLogbook) + ' exists'
         else:
-            self.__ologLogbook = Logbook(name = newLogbook, owner = Owner)
+            self.__ologLogbook = Logbook(name=newLogbook, owner=Owner)
             try:
                 self.__ologClient.createLogbook(self.__ologLogbook)
-                self.__existingLogbooks.append(self.__ologLogbook.getName())
+                # self.__existingLogbooks.append(self.__ologLogbook.getName())
             except:
                 self.__pythonLogger.warning('Olog Logbook cannot be created')
                 raise
-        return None
-    
+
     def retrieveLogbooks(self):
         '''
         Gets and assings "all active logbooks" to self._existingLogbooks
@@ -228,6 +230,7 @@ class EpicsLogger():
         '''
         self.isOlog()
         self.is_ologClient()
+        self.__is_pyLogger()
         logbooks = self.__composeLogbookList()
         return logbooks
     
@@ -238,12 +241,12 @@ class EpicsLogger():
         """
         self.isOlog()
         self.is_ologClient()
+        self.__is_pyLogger()
         find_success = False
         log_books = self.retrieveLogbooks()
         if logBook in log_books:
             find_success = True
         else:
-            print 'Queried Logbook does not exist'
             raise ValueError('Queried Logbook does not exist')
         return find_success
 
@@ -277,7 +280,7 @@ class EpicsLogger():
             print "Logging Mode:"
             self.__pythonLogger.warning('Olog logbooks cannot be accessed')
             raise
-        self.__exlogBookistingLogbooks = logbookNames
+        self.__existingLogbooks = logbookNames
         return logbookNames
     
     
@@ -288,6 +291,7 @@ class EpicsLogger():
         newTagState = 'Active'
         self.isOlog()
         self.is_ologClient()
+        self.__is_pyLogger()
         tag_list = list()
         try:
             tagObjects = self.__ologClient.listTags()
@@ -298,13 +302,13 @@ class EpicsLogger():
             tag_list.append(entry.getName())
         if newTagName in tag_list:
             self.__pythonLogger.info('Olog Tag' + str(newTagName) + ' has already been created')
-            print 'Olog Tag ' + str(newTagName) + ' has already been created'
             self.__ologTag = self.__retrieveTagObject(name=newTagName)
+            return 'Olog Tag ' + str(newTagName) + ' has already been created'
         else:
             self.__ologTag = Tag(name=newTagName, state=newTagState)
             try:
                 self.__ologClient.createTag(self.__ologTag)
-                self.__existingTags.append(self.__ologTag.getName())
+                # self.__existingTags.append(self.__ologTag.getName())
             except:
                 self.__pythonLogger.warning('Olog Tag can not be created')
                 raise
@@ -315,6 +319,7 @@ class EpicsLogger():
             '''
             self.isOlog()
             self.is_ologClient()
+            self.__is_pyLogger()
             tags = self.__composeTagList()
             return tags
 
@@ -324,6 +329,7 @@ class EpicsLogger():
         """
         self.isOlog()
         self.is_ologClient()
+        self.__is_pyLogger()
         find_success = False
         tag_list = self.retrieveTags()
         if tag in tag_list:
@@ -355,77 +361,91 @@ class EpicsLogger():
         self.__existingTags = tag_names
         return tag_names
     
-    
-    def verifyPropName(self,name):
-        '''
-        Returns "None" if user does not want to enter new property name.
-        Returns new user defined "property name" if name was in use
-        '''
+    def createProperty(self, propName, attributes):
+        """
+        Creates a remote Olog property
+        """
+        #TODO: Add attribute validation to property creation
         self.isOlog()
         self.is_ologClient()
-        propDict = self.__composePropAttDict()
-        if propDict.has_key(name):
-            renameResp = raw_input("The name suggested for new Property exists. Rename[y/n]")
-            if renameResp == 'y':
-                name = raw_input('Prop Name: ')
-            else:
-                name == None
-        return name
-
-    def retrieveExistingPropObjects(self):
-        '''
-        Returns a list of existing property objects
-        '''
-        self.isOlog()
-        self.is_ologClient()
-        self.__existingProperties=self.__ologClient.listProperties()
-        return self.__existingProperties
-
-    def __composePropAttDict(self):
-        '''
-        Returns a dictionary where property names are the "keys" and values are attribute names
-        '''
-        paDict = dict()
-        propObjects = self.retrieveExistingPropObjects()
-        for entry in propObjects:
-            paDict[entry.getName()] = entry.getAttributeNames()
-        return paDict
-
-    def __composePropList(self):
-        temp_prop = list()
-        try:
-            prop_objects = self.__ologClient.listProperties()
-            temp_prop = list()
-            for entry in prop_objects:
-                temp_prop.append(entry.getName())
-        except:
-            raise
-
-    def createProperty(self, name, **kwargs):
-        '''
-        Returns the status of Olog Property creation operation
-        Return Type: Boolean
-        '''
-        createSuccess = False
-        property_name = self.verifyPropName(name)
-        print property_name
-        if property_name is None:
-            createSuccess = False
+        self.__is_pyLogger()
+        prop = Property(name=propName,attributes=attributes)
+        property_names = self.retrievePropertyNames()
+        if propName in property_names:
+            property_object = self.__retrievePropertyObject(name=propName)
+            existing_attributes = property_object.getAttributeNames()
+            for entry in existing_attributes:
+                if attributes.has_key(entry):
+                    self.__ologLogProperty = self.__retrievePropertyObject(name=propName)
+                    self.__pythonLogger.info('Olog Property ' + str(propName) + ' exists')
+                    return 'Olog Property ' + str(propName) + ' exists'
+                else:
+                    raise ValueError('Attributes for given Property Name does not match.')
+                    break
         else:
-            prop = Property(name = property_name, attributes = kwargs)
             try:
                 self.__ologClient.createProperty(prop)
+                self.__ologProperty = prop
             except:
-                raise Exception('Cannot connect to Olog server to create Olog Property')
-                self.__pythonLogger.warning('Cannot connect to Olog server to create Property')
-            createSuccess = True
-        return createSuccess
+                self.__pythonLogger.info('Remote Property can not be created')
+                raise
 
-    def listProperties(self):
-        '''
-        Returns a dictionary of properties and their attributes: {keys=Property Name,values=Attribute Names}
-        '''
-        return self.__composePropAttDict()
+    def modifyProperty(self, name, attributes):
+        """
+        Modifies property attributes if not defined properly.
+        """
+        raise NotImplementedError('Olog needs to be modified for this to be achieved.')
+
+    def retrievePropertyNames(self):
+        self.isOlog()
+        self.is_ologClient()
+        self.__is_pyLogger()
+        self.__existingProperties = self.__composePropertyDict()
+        return self.__existingProperties.keys()
+
+    def retrievePropertyWithAttributes(self):
+        self.is_ologClient()
+        self.is_ologClient()
+        self.__is_pyLogger()
+        return self.__composePropertyDict()
+
+    def queryProperties(self,property):
+        self.isOlog()
+        self.is_ologClient()
+        self.__is_pyLogger()
+        find_success = False
+        properties = self.retrievePropertyNames()
+        if property in properties:
+            find_success = True
+        else:
+            raise ValueError('Queried Property does not exist')
+        return find_success
+
+    def retrieveAttributeValues(self,propName, attName):
+        property_object = self.__retrievePropertyObject(propName)
+        attribute_names = property_object.getAttributeNames()
+        attribute_values = list()
+        for entry in attribute_names:
+            attribute_values.append(property_object.getAttributeValue(entry))
+        return attribute_values
+
+    def __retrievePropertyObject(self,name):
+        queried_prop = None
+        property_objects = self.__ologClient.listProperties()
+        for entry in property_objects:
+            if entry.getName() == name:
+                queried_prop = entry
+                break
+        if queried_prop is None:
+            raise ValueError('Quried property does not exist')
+        return queried_prop
+
+    def __composePropertyDict(self):
+        property_dict = dict()
+        property_objects = self.__ologClient.listProperties()
+        for entry in property_objects:
+            property_dict[entry.getName()] = entry.getAttributeNames()
+        return property_dict
 
     def setName(self,name):
         '''
