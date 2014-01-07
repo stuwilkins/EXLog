@@ -5,6 +5,7 @@ Created on Dec 11, 2013
 '''
 from pyOlog._conf import _conf
 from epicsLogger.epicsLog import EpicsLogger
+from random import random
 import unittest
 import requests
 
@@ -60,7 +61,7 @@ class TestSetLogEnvironment(unittest.TestCase):
         self.assertRaises(requests.exceptions.MissingSchema, self.logInstance.createOlogClient, 'unit tester',
                           incorrect_url2, incorrect_usr, incorrect_pswd)
         self.logInstance.createOlogClient(name='Unit tester', url=URL, username=incorrect_usr, password=PSWD)
-        # self.assertRaises(requests.exceptions.SSLError, self.logInstance.createLogbook, sample_logbookName, sample_logbookOwner)
+        self.assertRaises(requests.HTTPError, self.logInstance.createLogbook, sample_logbookName, sample_logbookOwner)
 
     def testCreateLocalClient(self):
         """
@@ -110,9 +111,11 @@ class TestCreateRemoteOlogData(unittest.TestCase):
                          'Attempt to avoid create existing tag failed')
 
     def testCreateRemoteProperty(self):
+        att_name_1 = 'attribute' + str(random())
+        att_names_2 = 'attribute' + str(random())
         try:
-            self.logInstance.createProperty(propName='unit test property', attributes={'new attribute 3' : 'some_value_1',
-                                                                                       'new attribute' : 'some_value_2'})
+            self.logInstance.createProperty(propName='unit test property', attributes={att_name_1: None,
+                                                                                       att_names_2: None})
         except:
             raise
         prop_names = self.logInstance.retrievePropertyNames()
@@ -127,9 +130,12 @@ class TestCreateRemoteOlogData(unittest.TestCase):
 
 
 class TestQueryRemoteOlogData(unittest.TestCase):
+
+
     def setUp(self):
         self.logInstance = EpicsLogger()
-        self.logInstance.setLogMode(mode='remote')
+        self.logInstance.setLogMode(mode=''
+                                         'remote')
         self.logInstance.createOlogClient(name='unit tester', url=URL, username=USR, password=PSWD)
 
 
@@ -142,7 +148,7 @@ class TestQueryRemoteOlogData(unittest.TestCase):
     def testQueryTag(self):
         pass
 
-    def testQueryPropery(self):
+    def testQueryProperty(self):
         pass
 
     def testQueryLogEntry(self):

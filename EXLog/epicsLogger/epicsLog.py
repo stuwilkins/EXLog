@@ -64,11 +64,11 @@ class EpicsLogger():
             raise Exception("Log level is set to server. Set level to local for using local logging functionalities")
 
     def createLogInstance(self, mode='remote'):
-        '''
+        """
         createLogInstance() provides a simplified way to create an EpicsLogger instance./
         This routine handles local vs. server logging. Advanced users who would like to/
         customize their applications can still use other EpicsLogger instances in order to create logging instances that satisfy their needs.
-        '''
+        """
         #check logging mode: try create olog client. check flag returned
         #if local, use createLocalLogger()
         #if local does not work either: finally raise exception
@@ -365,43 +365,47 @@ class EpicsLogger():
         self.isOlog()
         self.is_ologClient()
         self.__is_pyLogger()
-        prop = Property(name=propName,attributes=attributes)
         property_names = self.retrievePropertyNames()
-        # if propName in property_names:
-        #     property_object = self.__retrievePropertyObject(name=propName)
-        #     existing_attributes = property_object.getAttributeNames()
-        #     #Need to verify an attribute. Compose attribute dictionary. update values if they exist
-        #     for entry in attributes:
-        #         if entry in existing_attributes:
-        #             self.__pythonLogger.info('Attribute '+ str(entry) + ' exists')
-        #             print 'Attribute ' + str(entry) + ' exists'
-        #         else:
-        #             pass
-        #             # try:
-        #             #     self.__ologClient.createProperty(prop)
-        #             #     self.__ologProperty = prop
-        #             # except:
-        #             #     self.__pythonLogger.info('Remote Property can not be created')
-        #             #     raise
-        # else:
-        try:
-            self.__ologClient.createProperty(prop)
-            self.__ologProperty = prop
-        except:
-            self.__pythonLogger.info('Remote Property can not be created')
-            raise
+        if propName in property_names:
+            property_object = self.__retrievePropertyObject(name=propName)
+            #Need to verify an attribute. Compose attribute dictionary. update values if they exist
+            new_attributes = self.__composeAttributeDict(propName, attributes)
+            self.__add2ExistingProperty(propName, new_attributes)
+        else:
+            prop = Property(name=propName,attributes=attributes)
+            try:
+                self.__ologClient.createProperty(prop)
+                self.__ologProperty = prop
+            except:
+                self.__pythonLogger.info('Remote Property can not be created')
+                raise
 
-    def add2Property(self, attributes):
+    def __add2ExistingProperty(self, prop_name, attribute_dict):
         """
         Adds non-existing attributes to a property
         """
-        pass
+        prop = Property(name=prop_name, attributes=attribute_dict)
+        try:
+            self.__ologClient.createProperty(prop)
+            self.__pythonLogger.info('Property ' + str(prop_name) + ' updated')
+        except:
+            self.__pythonLogger.warning('Property cannot be created')
+            raise
 
-    def verifyAttribute(self, propObject):
+    def __composeAttributeDict(self, prop_name, attributes):
         """
         Checks whether an attribute exists for given property. Returns a dictionary of non-existing attributes
         """
-        pass
+        property_object = self.__retrievePropertyObject(name=prop_name)
+        existing_attributes = property_object.getAttributeNames()
+        new_attribute_dict = dict()
+        for entry in attributes:
+            if entry in existing_attributes:
+                self.__pythonLogger.info('Attribute ' + str(entry) + ' exists')
+            else:
+                new_attribute_dict[entry] = None
+        return new_attribute_dict
+
 
     def retrievePropertyNames(self):
         self.isOlog()

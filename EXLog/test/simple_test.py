@@ -13,9 +13,11 @@ incorrect_pswd = 'None'
 
 logInst = EpicsLogger()
 logInst.createOlogClient(name='Unit tester', url=URL, username=USR, password=PSWD)
-a = logInst.retrieveOlogClient().listProperties()
-for entry in a:
-    print entry.getName()
-    print entry.getAttributeValue(entry.getAttributeNames()[0])
-for entry in a:
-    print entry.getAttributes()
+# a = logInst.retrieveOlogClient().listProperties()
+# for entry in a:
+#     print entry.getName()
+#     print entry.getAttributeValue(entry.getAttributeNames()[0])
+# for entry in a:
+#     # print entry.getAttributes()
+#     print entry.getAttributeValue(entry.getName())
+logInst.createProperty('new test', {'arman':None, 'arman.2':None})
