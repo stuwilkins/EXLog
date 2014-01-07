@@ -167,7 +167,7 @@ class EpicsLogger():
 
     def delete(self, **kwds):
         '''
-        Method to delete a logEntry, logbook, property, tag
+        Method to delete a logEntry, logbook, tag
         delete(logEntryId = int)
         >>> delete(logEntryId=1234)
 
@@ -177,15 +177,11 @@ class EpicsLogger():
         delete(tagName = String)
         >>> delete(tagName = 'myTag')
         # tagName = tag name of the tag to be deleted (it will be removed from all logEntries)
-
-        delete(propertyName = String)
-        >>> delete(propertyName = 'position')
-        # propertyName = property name of property to be deleted (it will be removed from all logEntries)
         '''
         self.isOlog()
         self.is_ologClient()
         self.__ologClient.delete(**kwds)
-        return 'yay'
+
 
     def retrieveOlogClient(self):
         '''
@@ -285,9 +281,9 @@ class EpicsLogger():
     
     
     def createTag(self, newTagName):
-        '''
+        """
         Creates an Olog tag.
-        '''
+        """
         newTagState = 'Active'
         self.isOlog()
         self.is_ologClient()
@@ -371,30 +367,41 @@ class EpicsLogger():
         self.__is_pyLogger()
         prop = Property(name=propName,attributes=attributes)
         property_names = self.retrievePropertyNames()
-        if propName in property_names:
-            property_object = self.__retrievePropertyObject(name=propName)
-            existing_attributes = property_object.getAttributeNames()
-            for entry in existing_attributes:
-                if attributes.has_key(entry):
-                    self.__ologLogProperty = self.__retrievePropertyObject(name=propName)
-                    self.__pythonLogger.info('Olog Property ' + str(propName) + ' exists')
-                    return 'Olog Property ' + str(propName) + ' exists'
-                else:
-                    raise ValueError('Attributes for given Property Name does not match.')
-                    break
-        else:
-            try:
-                self.__ologClient.createProperty(prop)
-                self.__ologProperty = prop
-            except:
-                self.__pythonLogger.info('Remote Property can not be created')
-                raise
+        # if propName in property_names:
+        #     property_object = self.__retrievePropertyObject(name=propName)
+        #     existing_attributes = property_object.getAttributeNames()
+        #     #Need to verify an attribute. Compose attribute dictionary. update values if they exist
+        #     for entry in attributes:
+        #         if entry in existing_attributes:
+        #             self.__pythonLogger.info('Attribute '+ str(entry) + ' exists')
+        #             print 'Attribute ' + str(entry) + ' exists'
+        #         else:
+        #             pass
+        #             # try:
+        #             #     self.__ologClient.createProperty(prop)
+        #             #     self.__ologProperty = prop
+        #             # except:
+        #             #     self.__pythonLogger.info('Remote Property can not be created')
+        #             #     raise
+        # else:
+        try:
+            self.__ologClient.createProperty(prop)
+            self.__ologProperty = prop
+        except:
+            self.__pythonLogger.info('Remote Property can not be created')
+            raise
 
-    def modifyProperty(self, name, attributes):
+    def add2Property(self, attributes):
         """
-        Modifies property attributes if not defined properly.
+        Adds non-existing attributes to a property
         """
-        raise NotImplementedError('Olog needs to be modified for this to be achieved.')
+        pass
+
+    def verifyAttribute(self, propObject):
+        """
+        Checks whether an attribute exists for given property. Returns a dictionary of non-existing attributes
+        """
+        pass
 
     def retrievePropertyNames(self):
         self.isOlog()
@@ -437,7 +444,7 @@ class EpicsLogger():
                 queried_prop = entry
                 break
         if queried_prop is None:
-            raise ValueError('Quried property does not exist')
+            raise ValueError('Queried property does not exist')
         return queried_prop
 
     def __composePropertyDict(self):

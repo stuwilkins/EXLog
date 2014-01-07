@@ -8,9 +8,9 @@ from epicsLogger.epicsLog import EpicsLogger
 import unittest
 import requests
 
-URL=_conf.get('user_config','url')
-USR=_conf.get('user_config','user')
-PSWD=_conf.get('user_config','password')
+URL = _conf.get('user_config', 'url')
+USR = _conf.get('user_config', 'user')
+PSWD = _conf.get('user_config', 'password')
 
 # URL = "http://localhost:8080/Olog
 
@@ -18,6 +18,7 @@ class TestSetLogEnvironment(unittest.TestCase):
     """
     Unit test obtains URL, user name, and password information from pyOlog.conf file.
     """
+
     def setUp(self):
         self.logInstance = EpicsLogger()
 
@@ -30,12 +31,13 @@ class TestSetLogEnvironment(unittest.TestCase):
         Smart createLogInstance NotImplementedError
         """
         invalid_logMode = 'invalid_mode'
-        self.assertEqual(self.logInstance.retrieveLogMode(),'remote','Default logging mode must be remote')
+        self.assertEqual(self.logInstance.retrieveLogMode(), 'remote', 'Default logging mode must be remote')
         self.logInstance.setLogMode(mode='local')
-        self.assertRaises(Exception,self.logInstance.isOlog,'Once log mode is set to local, remote operations are not allowed')
+        self.assertRaises(Exception, self.logInstance.isOlog,
+                          'Once log mode is set to local, remote operations are not allowed')
         self.assertEqual(self.logInstance.retrieveLogMode(), 'local', 'Logging mode can not be set')
         self.logInstance.setLogMode(mode='remote')
-        self.assertRaises(Exception,self.logInstance.isLocal)
+        self.assertRaises(Exception, self.logInstance.isLocal)
         self.assertEqual(self.logInstance.retrieveLogMode(), 'remote', 'Logging mode can not be set')
         self.assertRaises(ValueError, self.logInstance.setLogMode, invalid_logMode)
         self.assertRaises(NotImplementedError, self.logInstance.createLogInstance, 'local')
@@ -53,9 +55,11 @@ class TestSetLogEnvironment(unittest.TestCase):
         incorrect_pswd = 'None'
         sample_logbookName = 'test logbook'
         sample_logbookOwner = 'test owner'
-        self.assertRaises(requests.exceptions.ConnectionError, self.logInstance.createOlogClient, 'unit tester', incorrect_url1, incorrect_usr, incorrect_pswd)
-        self.assertRaises(requests.exceptions.MissingSchema, self.logInstance.createOlogClient, 'unit tester', incorrect_url2, incorrect_usr, incorrect_pswd)
-        self.logInstance.createOlogClient(name='Unit tester', url = URL, username = incorrect_usr, password = PSWD)
+        self.assertRaises(requests.exceptions.ConnectionError, self.logInstance.createOlogClient, 'unit tester',
+                          incorrect_url1, incorrect_usr, incorrect_pswd)
+        self.assertRaises(requests.exceptions.MissingSchema, self.logInstance.createOlogClient, 'unit tester',
+                          incorrect_url2, incorrect_usr, incorrect_pswd)
+        self.logInstance.createOlogClient(name='Unit tester', url=URL, username=incorrect_usr, password=PSWD)
         # self.assertRaises(requests.exceptions.SSLError, self.logInstance.createLogbook, sample_logbookName, sample_logbookOwner)
 
     def testCreateLocalClient(self):
@@ -63,10 +67,10 @@ class TestSetLogEnvironment(unittest.TestCase):
         Test to create a local logging client:
             Not yet implemented
         """
-        self.assertRaises(NotImplementedError, self.logInstance.createLocalLogger,'unit test')
+        self.assertRaises(NotImplementedError, self.logInstance.createLocalLogger, 'unit test')
+
 
 class TestCreateRemoteOlogData(unittest.TestCase):
-
     def setUp(self):
         """
         Create an EpicsLogger instance, set log mode to remote and create an Olog client to carry on logging tasks
@@ -83,7 +87,7 @@ class TestCreateRemoteOlogData(unittest.TestCase):
             self.logInstance.createTag(newTagName='unit test tag')
         except:
             raise
-        self.assertTrue(self.logInstance.queryTags(tag='unit test tag'),'Tag create failure not detected')
+        self.assertTrue(self.logInstance.queryTags(tag='unit test tag'), 'Tag create failure not detected')
         self.assertEqual(self.logInstance.createTag(newTagName='unit test tag'),
                          'Olog Tag unit test tag has already been created',
                          'Attempt to avoid create existing tag failed')
@@ -99,14 +103,20 @@ class TestCreateRemoteOlogData(unittest.TestCase):
         except:
             raise
         self.logInstance.createLogbook(newLogbook='unit test logbook',
-                        Owner='unit tester')
+                                       Owner='unit tester')
         self.assertEqual(self.logInstance.createLogbook(newLogbook='unit test logbook',
-                        Owner='unit tester'),
-                        'Olog Logbook unit test logbook exists',
-                        'Attempt to avoid create existing tag failed')
+                                                        Owner='unit tester'),
+                         'Olog Logbook unit test logbook exists',
+                         'Attempt to avoid create existing tag failed')
 
     def testCreateRemoteProperty(self):
-        pass
+        try:
+            self.logInstance.createProperty(propName='unit test property', attributes={'new attribute 3' : 'some_value_1',
+                                                                                       'new attribute' : 'some_value_2'})
+        except:
+            raise
+        prop_names = self.logInstance.retrievePropertyNames()
+        self.assertTrue('unit test property' in prop_names, 'Property was not created')
 
     def testCreateRemoteLogEntry(self):
         pass
@@ -117,7 +127,6 @@ class TestCreateRemoteOlogData(unittest.TestCase):
 
 
 class TestQueryRemoteOlogData(unittest.TestCase):
-
     def setUp(self):
         self.logInstance = EpicsLogger()
         self.logInstance.setLogMode(mode='remote')
@@ -141,14 +150,11 @@ class TestQueryRemoteOlogData(unittest.TestCase):
 
 
 class TestQueryRemoteLogEntries(unittest.TestCase):
-
     def setUp(self):
         pass
 
     def testCreateLogWithAttachments(self):
         pass
-
-
 
 
 if __name__ == '__main__':
