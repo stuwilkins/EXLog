@@ -113,6 +113,14 @@ class TestCreateRemoteOlogData(unittest.TestCase):
     def testCreateRemoteProperty(self):
         att_name_1 = 'attribute' + str(random())
         att_names_2 = 'attribute' + str(random())
+        random_prop_name = 'unit test random prop ' + str(random())
+        try:
+            self.logInstance.createProperty(random_prop_name,{att_name_1:None})
+        except:
+            raise
+        prop_names = self.logInstance.retrievePropertyNames()
+        self.assertTrue(random_prop_name in prop_names, 'Property was not created')
+        self.logInstance.delete(propertyName=random_prop_name)
         try:
             self.logInstance.createProperty(propName='unit test property', attributes={att_name_1: None,
                                                                                        att_names_2: None})

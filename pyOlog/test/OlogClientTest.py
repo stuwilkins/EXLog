@@ -272,7 +272,7 @@ class LogEntrySearchTest(unittest.TestCase):
         self.assertIn(self.testLogEntry2, logEntries, 'Failed to search by time')
         pass
     
-    def testSearchByMultipleParamerters(self):
+    def testSearchByMultipleParameters(self):
         self.assertIn(self.testLogEntry1, self.client.find(search=self.text, tag=self.testTag.getName(), logbook=self.testLogbook.getName()))
         logEntries = self.client.find(start=self.t1, end=self.t3, tag=self.testTag.getName())
         self.assertIn(self.testLogEntry1, logEntries, 'Failed to search by time and tag')

@@ -361,7 +361,6 @@ class EpicsLogger():
         """
         Creates a remote Olog property
         """
-        #TODO: Add attribute validation to property creation
         self.isOlog()
         self.is_ologClient()
         self.__is_pyLogger()
@@ -405,7 +404,6 @@ class EpicsLogger():
             else:
                 new_attribute_dict[entry] = None
         return new_attribute_dict
-
 
     def retrievePropertyNames(self):
         self.isOlog()
@@ -457,6 +455,24 @@ class EpicsLogger():
         for entry in property_objects:
             property_dict[entry.getName()] = entry.getAttributeNames()
         return property_dict
+
+    def log(self, text, owner, logbooks, tags=[], attachments=[], properties=[], id=None, createTime=None, modifyTime=None):
+        """
+        Provides user a way to create a log entry using the configuration parameters
+        """
+        raise NotImplementedError('Log entry not yet implemented')
+
+    def __composeLogEntry(self, text, owner, logbooks, tags=[], attachments=[], properties=[], id=None, createTime=None, modifyTime=None):
+        """
+        Prepares log entry. Simplifies logging for users
+        """
+        raise NotImplementedError('Log entry not yet implemented')
+
+    def findLog(self):
+        """
+        Allows user to find a log entry
+        """
+        raise NotImplementedError('Log entry not yet implemented')
 
     def setName(self,name):
         '''
