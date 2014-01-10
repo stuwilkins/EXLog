@@ -10,17 +10,20 @@ from pyOlog import OlogClient
 from pyOlog.OlogDataTypes import Attachment, Logbook, LogEntry, Property, Tag
 import logging
 from os import path
+import time
+import calendar
+import datetime
 #TODO: Keep track of existing property inside a dictionary that as an attribute to class instance. append the newly created entries. this reduces the number of trips to the database
 #TODO: Add regular expressions to queries.
 #TODO: createLogInstance() must provide an easy way to create logging object for developers
 class EpicsLogger():
-    '''
+    """
     classdocs
-    '''
+    """
     def __init__(self):
-        '''
+        """
         Constructor
-        '''
+        """
         self.__ologClient = None
         self.__ologLogbook = None
         self.__ologTag = None
@@ -31,6 +34,7 @@ class EpicsLogger():
         self.__existingTags = list()
         self.__ologEntry = None
         self.__name = None
+        self.__logbookOwner = 'default owner'
         self.__pythonLogger = None
         self.__logMode = 'remote'
 
@@ -48,18 +52,18 @@ class EpicsLogger():
         return self.__logMode
 
     def isOlog(self):
-        '''
+        """
         Checks whether logging mode is set to remote olog server
         Raises exception if logging mode is set to local. Called in order to assure remote logging inside routines
-        '''
+        """
         if self.__logMode == 'local':
             raise Exception("Log level is set to local. Set level to server for using Olog functionalities")
 
     def isLocal(self):
-        '''
+        """
         Checks whether logging mode is set to local log file.
         Raises exception if logging mode is set to remote. Called in order to assure local logging inside routines
-        '''
+        """
         if self.__logMode == 'remote':
             raise Exception("Log level is set to server. Set level to local for using local logging functionalities")
 
@@ -69,15 +73,16 @@ class EpicsLogger():
         This routine handles local vs. server logging. Advanced users who would like to/
         customize their applications can still use other EpicsLogger instances in order to create logging instances that satisfy their needs.
         """
+        #make sure logbook owner is read from configuration file
         #check logging mode: try create olog client. check flag returned
         #if local, use createLocalLogger()
         #if local does not work either: finally raise exception
         raise NotImplementedError('Requirements needed for minimum logging given beamline application')
         
     def createPythonLogger(self, name):
-        '''
+        """
         Creates the local logging instance using native Python Formatter and Handler
-        '''
+        """
         self.setName(name)
         self.__pythonLogger = logging.getLogger(name)
         hdlr = logging.FileHandler(path.expanduser('~/' + str(name) + '.log'))
@@ -87,10 +92,10 @@ class EpicsLogger():
         self.__pythonLogger.setLevel(logging.INFO)
 
     def __is_pyLogger(self):
-        '''
+        """
         Checks whether a native python logger with handler and formatter information has been created
         Return Type: Boolean
-        '''
+        """
         flag = False
         if self.__pythonLogger is None:
             flag = False
@@ -99,19 +104,19 @@ class EpicsLogger():
         return flag
 
     def createLocalLogger(self, name):
-        '''
+        """
         This will create a local logging instance where connection to an olog server is not available or preferred.
-        '''
+        """
         #TODO: create local methods for logging w/o Olog remote server. This must be in a fashion such that this saved
         #information is parsable in the future.
         raise NotImplementedError("Local logging must have similar characteristics with remote olog logging. A set of logbooks, "
                                   "tags, and clients have to be generated.")
 
     def createOlogClient(self, name, url, username, password):
-        '''
+        """
         Creates a local logger and Olog client. pythonLogger is a prerequisite for all logging. Once Olog client is \
         successfully created, existing properties, tags, and logbooks are saved locally.
-        '''
+        """
         self.isOlog()
         self.__is_pyLogger()
         if not self.__is_pyLogger():
@@ -163,10 +168,10 @@ class EpicsLogger():
         self.is_ologClient()
         log_entries = self.__ologClient.find(**kwds)
         return log_entries
-        pass
 
     def delete(self, **kwds):
-        '''
+        #Propmpt user with once deleted can't be created with the same name
+        """
         Method to delete a logEntry, logbook, tag
         delete(logEntryId = int)
         >>> delete(logEntryId=1234)
@@ -177,7 +182,8 @@ class EpicsLogger():
         delete(tagName = String)
         >>> delete(tagName = 'myTag')
         # tagName = tag name of the tag to be deleted (it will be removed from all logEntries)
-        '''
+
+        """
         self.isOlog()
         self.is_ologClient()
         self.__ologClient.delete(**kwds)
@@ -197,21 +203,23 @@ class EpicsLogger():
         self.isOlog()
         return self.__ologClient
                 
-    def createLogbook(self,newLogbook,Owner):
-        '''
+    def createLogbook(self,newLogbook,**kwargs):
+        """
         Creates an olog Logbook and adds this logbook name to existing logbook names.
-        '''
+        """
         self.isOlog()
         self.is_ologClient()
         self.__is_pyLogger()
         used_logbook = None
+        if kwargs.has_key('owner'):
+            self.__logbookOwner = kwargs['owner']
         self.__existingLogbooks = self.retrieveLogbooks()
         if newLogbook in self.__existingLogbooks:
             self.__pythonLogger.info('Olog Logbook ' + str(newLogbook) + ' exists')
             self.__ologLogbook = self.__retrieveLogbookObject(name=newLogbook)
             return 'Olog Logbook ' + str(newLogbook) + ' exists'
         else:
-            self.__ologLogbook = Logbook(name=newLogbook, owner=Owner)
+            self.__ologLogbook = Logbook(name=newLogbook, owner=self.__logbookOwner)
             try:
                 self.__ologClient.createLogbook(self.__ologLogbook)
                 # self.__existingLogbooks.append(self.__ologLogbook.getName())
@@ -220,10 +228,10 @@ class EpicsLogger():
                 raise
 
     def retrieveLogbooks(self):
-        '''
+        """
         Gets and assings "all active logbooks" to self._existingLogbooks
         Returns:  tuple(list of active logbooks)
-        '''
+        """
         self.isOlog()
         self.is_ologClient()
         self.__is_pyLogger()
@@ -248,9 +256,9 @@ class EpicsLogger():
 
     def __retrieveLogbookObject(self, name):
         #TODO: Add regular expressions for queries
-        '''
+        """
         Returns a "Logbook Object" with given "Logbook Name".
-        '''
+        """
         logbook_objects = self.__ologClient.listLogbooks()
         queried_object = None
         for entry in logbook_objects:
@@ -278,8 +286,7 @@ class EpicsLogger():
             raise
         self.__existingLogbooks = logbookNames
         return logbookNames
-    
-    
+
     def createTag(self, newTagName):
         """
         Creates an Olog tag.
@@ -456,17 +463,67 @@ class EpicsLogger():
             property_dict[entry.getName()] = entry.getAttributeNames()
         return property_dict
 
-    def log(self, text, owner, logbooks, tags=[], attachments=[], properties=[], id=None, createTime=None, modifyTime=None):
+    def log(self, description, owner, logbooks=[], tags=[], attachments=[], properties=[], id=None):
         """
         Provides user a way to create a log entry using the configuration parameters
         """
-        raise NotImplementedError('Log entry not yet implemented')
+        composed_log_entry = self.__composeLogEntry(description, owner, logbooks, tags, attachments,
+                                                    properties, id)
+        try:
+            self.__ologClient.log(composed_log_entry)
+        except:
+            raise
 
     def __composeLogEntry(self, text, owner, logbooks, tags=[], attachments=[], properties=[], id=None, createTime=None, modifyTime=None):
         """
         Prepares log entry. Simplifies logging for users
         """
-        raise NotImplementedError('Log entry not yet implemented')
+        #TODO: Use URI explorer to determine whether attachments exist or not
+        logbookList = list()
+        tagList = list()
+        propList = list()
+        self.__verifyLogId(id)
+        for entry in logbooks:
+            if self.queryLogbook(logBook=entry):
+                logbookList.append(self.__retrieveLogbookObject(name=entry))
+        for entry in tags:
+            if self.queryTags(tag=entry):
+                tagList.append(self.__retrieveTagObject(name=entry))
+        for entry in properties:
+            if self.queryProperties(entry):
+                propList.append(self.__retrievePropertyObject(name=entry))
+        for entry in attachments:
+            pass
+        logEntry = LogEntry(text=text, owner=owner, logbooks=logbookList, tags=tagList,
+                            properties=propList, id=id)
+        return logEntry
+
+    def __verifyLogId(self, id):
+        if id is None:
+            pass
+        else:
+            log_entry = self.find(id=id)
+            if log_entry==[]:
+                raise ValueError('A log entry with specified ID does not exist')
+
+    def __loggingTime(self, id, createTime, modifyTime):
+        """
+        This routine is implemented with logging time for local logging only.\
+        Remote Olog logging uses json time stamping methods passed from MySQL db
+        """
+        result = dict()
+        if id is None:
+            if createTime is None:
+                createTime = calendar.timegm(time.gmtime())
+            result['createTime'] = createTime
+            result['modifyTime'] = None
+        else:
+            existing_log = self.find(id=id)
+            result['createTime'] = int((existing_log[0].getCreateTime())/1000)
+            if modifyTime is None:
+                modifyTime = int(calendar.timegm(time.gmtime()))
+            result['modifyTime'] = modifyTime
+        return result
 
     def findLog(self):
         """
@@ -475,9 +532,9 @@ class EpicsLogger():
         raise NotImplementedError('Log entry not yet implemented')
 
     def setName(self,name):
-        '''
+        """
         Sets the name for epicsLogger Instance. In the future this can be changed to iterators.
-        '''
+        """
         self.__name = name
 
     def getName(self):

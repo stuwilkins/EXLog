@@ -129,7 +129,7 @@ class OlogClient(object):
                  headers=self.__jsonheader,
                  auth=self.__auth).raise_for_status()
         
-    def find_logEntries(self, **kwds):
+    def find(self, **kwds):
         '''
         Search for logEntries based on one or many search criteria
         >> find(search='*Timing*')

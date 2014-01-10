@@ -3,7 +3,8 @@ Created on Dec 11, 2013
 
 @author: arkilic
 '''
-from pyOlog._conf import _conf
+# from pyOlog._conf import _conf
+from config._conf import _conf
 from epicsLogger.epicsLog import EpicsLogger
 from random import random
 import unittest
@@ -61,7 +62,7 @@ class TestSetLogEnvironment(unittest.TestCase):
         self.assertRaises(requests.exceptions.MissingSchema, self.logInstance.createOlogClient, 'unit tester',
                           incorrect_url2, incorrect_usr, incorrect_pswd)
         self.logInstance.createOlogClient(name='Unit tester', url=URL, username=incorrect_usr, password=PSWD)
-        self.assertRaises(requests.HTTPError, self.logInstance.createLogbook, sample_logbookName, sample_logbookOwner)
+        self.assertRaises(requests.HTTPError, self.logInstance.createLogbook, newLogbook=sample_logbookName, owner=sample_logbookOwner)
 
     def testCreateLocalClient(self):
         """
@@ -145,7 +146,6 @@ class TestQueryRemoteOlogData(unittest.TestCase):
         self.logInstance.setLogMode(mode=''
                                          'remote')
         self.logInstance.createOlogClient(name='unit tester', url=URL, username=USR, password=PSWD)
-
 
     def testQueryOlogClient(self):
         pass
