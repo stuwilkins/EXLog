@@ -1,21 +1,23 @@
-'''
+"""
 Copyright (c) 2013 Brookhaven National Laboratory
 All rights reserved. Use is subject to license terms and conditions.
 
 Created on Dec 2, 2013
 
 @author: arkilic
-'''
-from pyOlog import OlogClient
-from pyOlog.OlogDataTypes import Attachment, Logbook, LogEntry, Property, Tag
+"""
 import logging
 from os import path
 import time
 import calendar
-import datetime
-#TODO: Keep track of existing property inside a dictionary that as an attribute to class instance. append the newly created entries. this reduces the number of trips to the database
+from pyOlog import OlogClient
+from pyOlog.OlogDataTypes import Attachment, Logbook, LogEntry, Property, Tag
+
+
+#TODO: Keep track of existing property inside a dictionary that as an attribute to class instance. append the newly created entries. This reduces the number of trips to the database
 #TODO: Add regular expressions to queries.
 #TODO: createLogInstance() must provide an easy way to create logging object for developers
+
 class EpicsLogger():
     """
     classdocs
@@ -71,7 +73,8 @@ class EpicsLogger():
         """
         createLogInstance() provides a simplified way to create an EpicsLogger instance./
         This routine handles local vs. server logging. Advanced users who would like to/
-        customize their applications can still use other EpicsLogger instances in order to create logging instances that satisfy their needs.
+        customize their applications can still use other EpicsLogger instances in order to create logging instances that\
+        satisfy their needs.
         """
         #make sure logbook owner is read from configuration file
         #check logging mode: try create olog client. check flag returned

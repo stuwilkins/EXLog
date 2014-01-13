@@ -4,15 +4,12 @@ Created on Dec 11, 2013
 @author: arkilic
 '''
 # from pyOlog._conf import _conf
-from config._conf import _conf
+from EXLog.config.configParser import URL, USR, PSWD
 from epicsLogger.epicsLog import EpicsLogger
 from random import random
 import unittest
 import requests
 
-URL = _conf.get('user_config', 'url')
-USR = _conf.get('user_config', 'user')
-PSWD = _conf.get('user_config', 'password')
 
 # URL = "http://localhost:8080/Olog
 

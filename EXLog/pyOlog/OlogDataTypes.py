@@ -35,7 +35,6 @@ class LogEntry(object):
         self.properties = properties
         self.__id = id
         self.__createTime = createTime
-        self.__modifytime = modifyTime
         
     def getId(self):
         return self.__id
