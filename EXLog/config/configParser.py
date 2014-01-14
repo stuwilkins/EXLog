@@ -47,6 +47,7 @@ def __configEncoder(config_name, config_dict):
         config_params['logbooks'] = _conf.get(conf_set_name, 'logbooks')
         config_params['tags'] = _conf.get(conf_set_name, 'tags')
         config_params['properties'] = _conf.get(conf_set_name, 'properties')
+        config_params['log_owner'] = _conf.get(conf_set_name, 'log_owner')
     except:
         raise
     return config_params
@@ -77,3 +78,5 @@ MODE = params['logging_mode']
 LOGBOOKS = params['logbooks']
 TAGS = params['tags']
 PROPERTIES = params['properties']
+OWNER = params['log_owner']
+print PROPERTIES

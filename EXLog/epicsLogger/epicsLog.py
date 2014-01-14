@@ -12,8 +12,7 @@ import time
 import calendar
 from pyOlog import OlogClient
 from pyOlog.OlogDataTypes import Attachment, Logbook, LogEntry, Property, Tag
-
-
+from EXLog.config.configParser import URL, USR, PSWD, MODE, LOGBOOKS, TAGS, PROPERTIES
 #TODO: Keep track of existing property inside a dictionary that as an attribute to class instance. append the newly created entries. This reduces the number of trips to the database
 #TODO: Add regular expressions to queries.
 #TODO: createLogInstance() must provide an easy way to create logging object for developers
@@ -205,7 +204,7 @@ class EpicsLogger():
         '''
         self.isOlog()
         return self.__ologClient
-                
+
     def createLogbook(self,newLogbook,**kwargs):
         """
         Creates an olog Logbook and adds this logbook name to existing logbook names.
@@ -230,6 +229,10 @@ class EpicsLogger():
                 self.__pythonLogger.warning('Olog Logbook cannot be created')
                 raise
 
+    def createMultipleLogbooks(self, logbookList, owner):
+        for entry in logbookList:
+            self.createLogbook(newLogbook=entry, owner=owner)
+
     def retrieveLogbooks(self):
         """
         Gets and assings "all active logbooks" to self._existingLogbooks
@@ -243,7 +246,7 @@ class EpicsLogger():
     
     def queryLogbook(self,logBook):
         """
-        Queries Olog RDB and returns True or False based existince of queried "Logbook Name"
+        Queries Olog RDB and returns True or False based existence of queried "Logbook Name"
         Returns: Boolean
         """
         self.isOlog()
@@ -294,7 +297,6 @@ class EpicsLogger():
         """
         Creates an Olog tag.
         """
-        newTagState = 'Active'
         self.isOlog()
         self.is_ologClient()
         self.__is_pyLogger()
@@ -311,14 +313,18 @@ class EpicsLogger():
             self.__ologTag = self.__retrieveTagObject(name=newTagName)
             return 'Olog Tag ' + str(newTagName) + ' has already been created'
         else:
-            self.__ologTag = Tag(name=newTagName, state=newTagState)
+            self.__ologTag = Tag(name=newTagName, state='Active')
             try:
                 self.__ologClient.createTag(self.__ologTag)
                 # self.__existingTags.append(self.__ologTag.getName())
             except:
                 self.__pythonLogger.warning('Olog Tag can not be created')
                 raise
-            
+
+    def createMultipleTags(self, tagList):
+        for entry in tagList:
+            self.createTag(newTagName=entry)
+
     def retrieveTags(self):
             '''
             Returns existing olog tag instances already created

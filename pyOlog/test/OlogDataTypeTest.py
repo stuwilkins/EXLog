@@ -22,7 +22,7 @@ class TestTag(unittest.TestCase):
         tagb = Tag(name='testName', state='Active')
         self.assertEqual(taga, tagb, 'Failed equality condition')
         self.assertEqual([taga], [tagb], 'Failed equality condition')
-        pass
+
     
 class TestLogbook(unittest.TestCase):
     
