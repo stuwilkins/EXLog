@@ -395,6 +395,13 @@ class EpicsLogger():
                 self.__pythonLogger.info('Remote Property can not be created')
                 raise
 
+    def createMultipleProperties(self, prop_att_dict):
+        prop_names = prop_att_dict.keys()
+        for entry in prop_names:
+            attribute_names = prop_att_dict[entry]
+
+
+
     def __add2ExistingProperty(self, prop_name, attribute_dict):
         """
         Adds non-existing attributes to a property

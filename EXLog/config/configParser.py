@@ -5,7 +5,8 @@ Created on Jan 13, 2014
 
 @author: Arman Arkilic
 """
-#TODO: Add multiple logbook, tag, property reading capability. separated by comma to be interpreted as multiple entry
+#TODO: During multiple tag, logbook, property parse make sure space after comma is enforced.
+
 from EXLog.config._conf import _conf
 
 configs = _conf.items('configs')
@@ -68,15 +69,20 @@ def __verify_required_fields(keys, required_key_values):
         if entry not in keys:
             raise ValueError('Configuration file is required to have ' + str(entry) + ' field')
 
+def extractMultiple(temp_item):
+    return temp_item.split(', ')
 
 params = compose_configuration_params(configs,'config0')
-
+temp_tags = params['tags']
+temp_props = params['properties']
 URL = params['url']
 USR = params['user']
 PSWD = params['password']
 MODE = params['logging_mode']
-LOGBOOKS = params['logbooks']
-TAGS = params['tags']
-PROPERTIES = params['properties']
+LOGBOOKS = extractMultiple(params['logbooks'])
 OWNER = params['log_owner']
-print PROPERTIES
+temp_prop = params['properties']
+TAGS = extractMultiple(params['tags'])
+temp_prop = temp_prop.split(', ')
+for entry in temp_prop:
+    print entry.split(' ( ,) ')
