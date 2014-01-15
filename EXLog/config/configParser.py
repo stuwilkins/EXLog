@@ -86,3 +86,4 @@ TAGS = extractMultiple(params['tags'])
 temp_prop = temp_prop.split(', ')
 for entry in temp_prop:
     print entry.split(' ( ,) ')
+PROPERTIES = temp_prop
