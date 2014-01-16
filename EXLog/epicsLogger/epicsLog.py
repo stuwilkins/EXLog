@@ -10,13 +10,11 @@ import logging
 from os import path
 import time
 import calendar
-from pyOlog import OlogClient
-from pyOlog.OlogDataTypes import Attachment, Logbook, LogEntry, Property, Tag
-from EXLog.config.configParser import URL, USR, PSWD, MODE, LOGBOOKS, TAGS, PROPERTIES
+from EXLog.pyOlog import OlogClient
+from EXLog.pyOlog.OlogDataTypes import Attachment, Logbook, LogEntry, Property, Tag
 #TODO: Keep track of existing property inside a dictionary that as an attribute to class instance. append the newly created entries. This reduces the number of trips to the database
 #TODO: Add regular expressions to queries.
-#TODO: createLogInstance() must provide an easy way to create logging object for developers
-
+#TODO: Ensure the same attribute is not buffered multiple times before a flush
 class EpicsLogger():
     """
     classdocs
@@ -30,6 +28,7 @@ class EpicsLogger():
         self.__ologTag = None
         self.__ologProperty = None
         self.__existingProperties = dict()
+        self.__bufferedProperties = list()
         self.__existingAttributes = dict()
         self.__existingLogbooks = list()
         self.__existingTags = list()
@@ -382,7 +381,6 @@ class EpicsLogger():
         self.__is_pyLogger()
         property_names = self.retrievePropertyNames()
         if propName in property_names:
-            property_object = self.__retrievePropertyObject(name=propName)
             #Need to verify an attribute. Compose attribute dictionary. update values if they exist
             new_attributes = self.__composeAttributeDict(propName, attributes)
             self.__add2ExistingProperty(propName, new_attributes)
@@ -395,12 +393,18 @@ class EpicsLogger():
                 self.__pythonLogger.info('Remote Property can not be created')
                 raise
 
-    def createMultipleProperties(self, prop_att_dict):
-        prop_names = prop_att_dict.keys()
+    def createMultipleProperties(self, properties, prop_att_dict):
+        prop_names = properties
+        attribute_dict = dict()
         for entry in prop_names:
-            attribute_names = prop_att_dict[entry]
-
-
+            att_list = prop_att_dict[entry]
+            for item in att_list:
+                attribute_dict[item] = None
+            try:
+                self.createProperty(entry, attribute_dict)
+            except:
+                self.__pythonLogger.warning('Property cannot be created')
+                raise
 
     def __add2ExistingProperty(self, prop_name, attribute_dict):
         """
@@ -479,14 +483,35 @@ class EpicsLogger():
             property_dict[entry.getName()] = entry.getAttributeNames()
         return property_dict
 
-    def log(self, description, owner, logbooks=[], tags=[], attachments=[], properties=[], id=None):
+    def capture(self, propname, **kwds):
+        attributeDict = kwds
+        tba_att = dict()
+        existing_prop_att = self.retrievePropertyWithAttributes()
+        new_att_names = attributeDict.keys()
+        existing_prop_names = existing_prop_att.keys()
+        if propname in existing_prop_names:
+            existing_atts = existing_prop_att[propname]
+            for entry in new_att_names:
+                if entry in existing_atts:
+                    tba_att[entry] = attributeDict[entry]
+                else:
+                    raise ValueError('Attribute field for given property does not exist.Add attribute to property')
+        else:
+            raise ValueError('Property does not exist. Please create a property before capture()')
+        prop = Property(propname, tba_att)
+        self.__bufferedProperties.append(prop)
+
+    def get_buffered_properties(self):
+        return self.__bufferedProperties
+
+    def log(self, description, owner, logbooks=[], tags=[], attachments=[], id=None):
         """
         Provides user a way to create a log entry using the configuration parameters
         """
-        composed_log_entry = self.__composeLogEntry(description, owner, logbooks, tags, attachments,
-                                                    properties, id)
+        composed_log_entry = self.__composeLogEntry(description, owner, logbooks, tags, attachments,id)
         try:
             self.__ologClient.log(composed_log_entry)
+            self.__bufferedProperties = list()
         except:
             raise
 
@@ -505,13 +530,14 @@ class EpicsLogger():
         for entry in tags:
             if self.queryTags(tag=entry):
                 tagList.append(self.__retrieveTagObject(name=entry))
-        for entry in properties:
-            if self.queryProperties(entry):
-                propList.append(self.__retrievePropertyObject(name=entry))
-        for entry in attachments:
-            pass
+        # print len(properties)
+        # for entry in properties[0]:
+        #     if self.queryProperties(entry):
+        #         propList.append(self.__retrievePropertyObject(name=entry))
+        # for entry in attachments:
+        #     pass
         logEntry = LogEntry(text=text, owner=owner, logbooks=logbookList, tags=tagList,
-                            properties=propList, id=id)
+                            properties=self.__bufferedProperties, id=id)
         return logEntry
 
     def __verifyLogId(self, id):

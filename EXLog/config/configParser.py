@@ -5,11 +5,7 @@ Created on Jan 13, 2014
 
 @author: Arman Arkilic
 """
-#TODO: During multiple tag, logbook, property parse make sure space after comma is enforced.
-
 from EXLog.config._conf import _conf
-
-configs = _conf.items('configs')
 
 def compose_configuration_params(configs, config_key):
     """
@@ -72,18 +68,20 @@ def __verify_required_fields(keys, required_key_values):
 def extractMultiple(temp_item):
     return temp_item.split(', ')
 
+def composePropAttDict(properties):
+    temp_dict = dict()
+    for entry in properties:
+        temp_dict[entry] = _conf.get('attributes', entry).split(', ')
+    return temp_dict
+
+configs = _conf.items('configs')
 params = compose_configuration_params(configs,'config0')
-temp_tags = params['tags']
-temp_props = params['properties']
 URL = params['url']
 USR = params['user']
 PSWD = params['password']
 MODE = params['logging_mode']
 LOGBOOKS = extractMultiple(params['logbooks'])
 OWNER = params['log_owner']
-temp_prop = params['properties']
 TAGS = extractMultiple(params['tags'])
-temp_prop = temp_prop.split(', ')
-for entry in temp_prop:
-    print entry.split(' ( ,) ')
-PROPERTIES = temp_prop
+PROPERTIES = extractMultiple(params['properties'])
+PROP_ATT_DICT = composePropAttDict(PROPERTIES)
