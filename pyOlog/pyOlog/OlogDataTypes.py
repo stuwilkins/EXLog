@@ -14,7 +14,7 @@ class LogEntry(object):
     '''
 
     def __init__(self, text, owner, logbooks, tags=[], attachments=[], properties=[], id=None, createTime=None, modifyTime=None):
-        '''
+        """
         Constructor for log Entry
         Simple LogEntry
         >> LogEntry('test log entry', 'controls', logbooks=[Logbook('commissioning', owner='controls')])
@@ -26,7 +26,7 @@ class LogEntry(object):
                     properties=[Property('Ticket', attributes={'Id':'1234','URL':'http://trac.nsls2.bnl.gov/trac/1234'}]
                     attachments=[Attachment(open('databrowser.plt'))]
                     )
-        '''
+        """
         self.Text = str(text).strip();
         self.Owner = str(owner).strip();
         self.logbooks = logbooks

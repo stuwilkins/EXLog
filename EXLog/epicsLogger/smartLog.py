@@ -35,4 +35,4 @@ def createLogInstance(name):
 # client.capture(propname='testProperty', Attribute1='capture trial attribute value2')
 #
 # print client.get_buffered_properties()
-# client.log(description='trial log v1 capture', owner='arman', logbooks=['new logbook'], tags=['Septums'], attachments=[])
+# client.log(description='trial log v1 capture', owner='arman', logbooks=['new logbook'], tags=['Septums'], attachments=['/home/arkilic/EXLog.conf'])

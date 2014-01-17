@@ -508,21 +508,22 @@ class EpicsLogger():
         """
         Provides user a way to create a log entry using the configuration parameters
         """
-        composed_log_entry = self.__composeLogEntry(description, owner, logbooks, tags, attachments,id)
+        #TODO: Add defaults to log entry and use if not specified as decided in design doc
+        composed_log_entry = self.__composeLogEntry(description, owner, logbooks, tags, attachments, id)
         try:
             self.__ologClient.log(composed_log_entry)
             self.__bufferedProperties = list()
         except:
             raise
 
-    def __composeLogEntry(self, text, owner, logbooks, tags=[], attachments=[], properties=[], id=None, createTime=None, modifyTime=None):
+    def __composeLogEntry(self, text, owner, logbooks, tags=[], attachments=[], id=None):
         """
         Prepares log entry. Simplifies logging for users
         """
         #TODO: Use URI explorer to determine whether attachments exist or not
         logbookList = list()
         tagList = list()
-        propList = list()
+        attachmentList = list()
         self.__verifyLogId(id)
         for entry in logbooks:
             if self.queryLogbook(logBook=entry):
@@ -530,14 +531,10 @@ class EpicsLogger():
         for entry in tags:
             if self.queryTags(tag=entry):
                 tagList.append(self.__retrieveTagObject(name=entry))
-        # print len(properties)
-        # for entry in properties[0]:
-        #     if self.queryProperties(entry):
-        #         propList.append(self.__retrievePropertyObject(name=entry))
-        # for entry in attachments:
-        #     pass
+        for entry in attachments:
+            attachmentList.append(Attachment(file=entry))
         logEntry = LogEntry(text=text, owner=owner, logbooks=logbookList, tags=tagList,
-                            properties=self.__bufferedProperties, id=id)
+                            properties=self.__bufferedProperties, attachments=attachmentList, id=id)
         return logEntry
 
     def __verifyLogId(self, id):
@@ -567,11 +564,72 @@ class EpicsLogger():
             result['modifyTime'] = modifyTime
         return result
 
-    def findLog(self):
+    def findLog(self, **kwds):
         """
         Allows user to find a log entry
         """
-        raise NotImplementedError('Log entry not yet implemented')
+        #TODO: Add attachment log search. use value = ... case as in attribute values
+        search_params = kwds.keys()
+        if len(search_params) == 1 and 'tag' in search_params:
+            result = self.find(tag=kwds['tag'])
+        elif len(search_params) == 1 and 'property' in search_params:
+            result = self.find(property=kwds['property'])
+        elif len(search_params) == 1 and 'attachment' in search_params:
+            result = self.find(attachment=kwds['attachment'])
+        elif len(search_params) == 1 and 'description' in search_params:
+            result = self.find(text=kwds['description'])
+        elif len(search_params) == 2 and 'property' in search_params and 'tag' in search_params:
+            result = self.find(property=kwds['property'],
+                               tag=kwds['tag'])
+        elif len(search_params) == 2 and 'property' in search_params and 'attribute' in search_params:
+            result = self.find(property=kwds['property'],
+                               attribute=kwds['attribute'])
+        elif len(search_params) == 2 and 'logbook' in search_params and 'tag' in search_params:
+            result = self.find(logbook=kwds['logbook'],
+                               tag=kwds['tag'])
+        elif len(search_params) == 2 and 'logbook' in search_params and 'property' in search_params:
+            result = self.find(logbook=kwds['logbook'],
+                               property=kwds['property'])
+        elif len(search_params) == 2 and 'logbook' in search_params and 'attachment' in search_params:
+            result = self.find(logbook=kwds['logbook'],
+                               attachment=kwds['attachment'])
+        elif len(search_params) == 2 and 'logbook' in search_params and 'attribute' in search_params:
+            result = self.find(logbook=kwds['logbook'],
+                               attribute=kwds['attribute'])
+        elif len(search_params) == 3 and 'logbook' in search_params and 'property' in search_params and 'attribute' in search_params:
+            result = self.find(logbook=kwds['logbook'],
+                               property=kwds['property'],
+                               attribute=kwds['attributes'])
+        elif len(search_params) == 3 and 'property' in search_params and 'attribute' in search_params and 'value' in search_params:
+            result =self.find(**{kwds['property'] + '.'+kwds['attribute']: kwds['value']})
+        elif len(search_params) == 3 and 'logbook' in search_params and 'property' in search_params and 'tag' in search_params:
+            result = self.find(logbook=kwds['logbook'],
+                               property=kwds['property'],
+                               tag=kwds['tag'])
+        elif len(search_params) == 3 and 'logbook' in search_params and 'description' in search_params and 'tag' in search_params:
+            result = self.find(logbook=kwds['logbook'],
+                               text=kwds['description'],
+                               tag=kwds['tag'])
+        elif len(search_params) == 3 and 'logbook' in search_params and 'description' in search_params and 'property' in search_params:
+            result = self.find(logbook=kwds['logbook'],
+                               text=kwds['description'],
+                               property=kwds['property'])
+        elif len(search_params) == 4 and 'logbook' in search_params and 'description' in search_params and 'property' in search_params and 'tag' in search_params:
+            result = self.find(logbook=kwds['logbook'],
+                               text=kwds['description'],
+                               property=kwds['property'],
+                               tag=kwds['tag'])
+        elif len(search_params) == 4 and 'logbook' in search_params and 'property' in search_params and 'attribute' in search_params and 'value' in search_params:
+            result = self.find(**{kwds['property'] + '.'+kwds['attribute']: kwds['value'], 'logbook': kwds['logbook']})
+        elif len(search_params) == 4 and 'tag' in search_params and 'property' in search_params and 'attribute' in search_params and 'value' in search_params:
+            result = self.find(**{kwds['property'] + '.'+kwds['attribute']: kwds['value'], 'tag': kwds['tag']})
+        elif len(search_params) == 4 and 'description' in search_params and 'property' in search_params and 'attribute' in search_params and 'value' in search_params:
+            result = self.find(**{kwds['property'] + '.'+kwds['attribute']: kwds['value'], 'text': kwds['description']})
+        elif len(search_params) == 4 and 'attachment' in search_params and 'property' in search_params and 'attribute' in search_params and 'value' in search_params:
+            result = self.find(**{kwds['property'] + '.'+kwds['attribute']: kwds['value'], 'attachment': kwds['attachment']})
+        else:
+            raise NotImplementedError('Log entry search for this case is not yet implemented')
+        return result
 
     def setName(self,name):
         """
