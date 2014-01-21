@@ -29,10 +29,3 @@ def createLogInstance(name):
         logInstance.createMultipleProperties(PROPERTIES, PROP_ATT_DICT)
         return logInstance
 
-
-# client = createLogInstance('arman')
-# client.capture(propname='testProperty', Attribute1='capture trial attribute value1')
-# client.capture(propname='testProperty', Attribute1='capture trial attribute value2')
-#
-# print client.get_buffered_properties()
-# client.log(description='trial log v1 capture', owner='arman', logbooks=['new logbook'], tags=['Septums'], attachments=['/home/arkilic/EXLog.conf'])

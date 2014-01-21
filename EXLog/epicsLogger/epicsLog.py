@@ -504,6 +504,9 @@ class EpicsLogger():
     def get_buffered_properties(self):
         return self.__bufferedProperties
 
+    def flush(self):
+        self.__bufferedProperties == list()
+
     def log(self, description, owner, logbooks=[], tags=[], attachments=[], id=None):
         """
         Provides user a way to create a log entry using the configuration parameters
@@ -574,6 +577,8 @@ class EpicsLogger():
             result = self.find(tag=kwds['tag'])
         elif len(search_params) == 1 and 'property' in search_params:
             result = self.find(property=kwds['property'])
+        elif len(search_params) == 1 and 'attribute' in search_params:
+            result = self.find(attribute=kwds['attribute'])
         elif len(search_params) == 1 and 'attachment' in search_params:
             result = self.find(attachment=kwds['attachment'])
         elif len(search_params) == 1 and 'description' in search_params:
@@ -599,7 +604,7 @@ class EpicsLogger():
         elif len(search_params) == 3 and 'logbook' in search_params and 'property' in search_params and 'attribute' in search_params:
             result = self.find(logbook=kwds['logbook'],
                                property=kwds['property'],
-                               attribute=kwds['attributes'])
+                               attribute=kwds['attribute'])
         elif len(search_params) == 3 and 'property' in search_params and 'attribute' in search_params and 'value' in search_params:
             result =self.find(**{kwds['property'] + '.'+kwds['attribute']: kwds['value']})
         elif len(search_params) == 3 and 'logbook' in search_params and 'property' in search_params and 'tag' in search_params:
