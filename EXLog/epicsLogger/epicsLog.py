@@ -457,13 +457,22 @@ class EpicsLogger():
             raise ValueError('Queried Property does not exist')
         return find_success
 
-    def retrieveAttributeValues(self,propName, attName):
-        property_object = self.__retrievePropertyObject(propName)
+    def retrieveAttributeValues(self, property_object, attName):
+        """
+        Given a Property object and attribute name, this routine returns the associated attribute value./
+        Useful for consuming log entries found as a result of queries
+        """
         attribute_names = property_object.getAttributeNames()
-        attribute_values = list()
+        value = None
         for entry in attribute_names:
-            attribute_values.append(property_object.getAttributeValue(entry))
-        return attribute_values
+            temp = str(entry)
+            if temp == attName:
+                try:
+                    value = property_object.getAttributeValue(attName)
+                except:
+                    raise
+                break
+        return value
 
     def __retrievePropertyObject(self,name):
         queried_prop = None
@@ -606,7 +615,7 @@ class EpicsLogger():
                                property=kwds['property'],
                                attribute=kwds['attribute'])
         elif len(search_params) == 3 and 'property' in search_params and 'attribute' in search_params and 'value' in search_params:
-            result =self.find(**{kwds['property'] + '.'+kwds['attribute']: kwds['value']})
+            result = self.find(**{str(kwds['property']) + '.'+str(kwds['attribute']): str(kwds['value'])})
         elif len(search_params) == 3 and 'logbook' in search_params and 'property' in search_params and 'tag' in search_params:
             result = self.find(logbook=kwds['logbook'],
                                property=kwds['property'],
@@ -631,9 +640,11 @@ class EpicsLogger():
         elif len(search_params) == 4 and 'description' in search_params and 'property' in search_params and 'attribute' in search_params and 'value' in search_params:
             result = self.find(**{kwds['property'] + '.'+kwds['attribute']: kwds['value'], 'text': kwds['description']})
         elif len(search_params) == 4 and 'attachment' in search_params and 'property' in search_params and 'attribute' in search_params and 'value' in search_params:
-            result = self.find(**{kwds['property'] + '.'+kwds['attribute']: kwds['value'], 'attachment': kwds['attachment']})
+            result = self.find(**{str(kwds['property']) + '.'+str(kwds['attribute']): str(kwds['value']), 'attachment': kwds['attachment']})
         else:
             raise NotImplementedError('Log entry search for this case is not yet implemented')
+        if result == []:
+            raise ValueError('No logs with given parameters found')
         return result
 
     def setName(self,name):
