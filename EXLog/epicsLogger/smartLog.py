@@ -16,6 +16,7 @@ def createLogInstance(name):
     """
     logInstance = EpicsLogger()
     logInstance.createPythonLogger(name)
+    logInstance.setOwner(owner=OWNER)
     if MODE == 'local':
         raise NotImplementedError("Local logging w/o remote Olog server will be implemented")
     else:

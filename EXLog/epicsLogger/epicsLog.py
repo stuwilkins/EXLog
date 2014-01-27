@@ -34,6 +34,7 @@ class EpicsLogger():
         self.__existingTags = list()
         self.__ologEntry = None
         self.__name = None
+        self.__owner = None
         self.__logbookOwner = 'default owner'
         self.__pythonLogger = None
         self.__logMode = 'remote'
@@ -92,6 +93,12 @@ class EpicsLogger():
         self.__pythonLogger.addHandler(hdlr)
         self.__pythonLogger.setLevel(logging.INFO)
 
+    def setOwner(self, owner):
+        self.__owner = owner
+
+    def retrieveOwner(self):
+        return self.__owner
+
     def __is_pyLogger(self):
         """
         Checks whether a native python logger with handler and formatter information has been created
@@ -135,15 +142,15 @@ class EpicsLogger():
             raise
     
     def is_ologClient(self):
-        '''
+        """
         Checks whether an OlogClient for EpicsLogger instance is created.
-        '''
+        """
         self.isOlog()
         if self.retrieveOlogClient() is None:
             raise ValueError("Olog Client not created yet")
 
     def find(self, **kwds):
-        '''
+        """
         >>> find(search='*Timing*')
         find logentries with the text Timing in the description
 
@@ -164,7 +171,7 @@ class EpicsLogger():
         Searching using multiple criteria
         >>> find(logbook='contorls', tag='magnets')
         find all the log entries in logbook 'controls' AND with tag named 'magnets'
-        '''
+        """
         self.isOlog()
         self.is_ologClient()
         log_entries = self.__ologClient.find(**kwds)
@@ -191,7 +198,7 @@ class EpicsLogger():
 
 
     def retrieveOlogClient(self):
-        '''
+        """
         Returns OlogClient object created. Useful for calling native pyOlog routines
         Usage:
             >>> from pyOlog import Logbook, Attachments
@@ -200,7 +207,7 @@ class EpicsLogger():
             >>> sample_logbook = Logbook(name='sample logbook', owner= 'sample owner')
             >>> client.createLogbook(sample_logbook)
         **This is not recommended unless user is has a good understanding of epics logging tools and would like to add/debug pyOlogrs.**
-        '''
+        """
         self.isOlog()
         return self.__ologClient
 
@@ -472,9 +479,23 @@ class EpicsLogger():
                 except:
                     raise
                 break
+            else:
+                value = 'N/A'
+        if value == 'N/A':
+            raise ValueError('Attribute for given property does not exist.')
         return value
 
-    def __retrievePropertyObject(self,name):
+    def retrieveMultipleAttributeValues(self, property_object, attList):
+        """
+        Given a Property object and a list of attribute names of this property, this routine provides attribute values
+        """
+        value_dict = dict()
+        for entry in attList:
+            val = self.retrieveAttributeValues(property_object=property_object, attName=entry)
+            value_dict[entry] = val
+        return value_dict
+
+    def __retrievePropertyObject(self, name):
         queried_prop = None
         property_objects = self.__ologClient.listProperties()
         for entry in property_objects:
@@ -516,17 +537,20 @@ class EpicsLogger():
     def flush(self):
         self.__bufferedProperties == list()
 
-    def log(self, description, owner, logbooks=[], tags=[], attachments=[], id=None):
+    def log(self, description, owner=None, logbooks=[], tags=[], attachments=[], id=None):
         """
         Provides user a way to create a log entry using the configuration parameters
         """
-        #TODO: Add defaults to log entry and use if not specified as decided in design doc
-        composed_log_entry = self.__composeLogEntry(description, owner, logbooks, tags, attachments, id)
-        try:
-            self.__ologClient.log(composed_log_entry)
-            self.__bufferedProperties = list()
-        except:
-            raise
+        owner = self.retrieveOwner()
+        if owner is None:
+            raise ValueError('Please specify an owner for this log entry')
+        else:
+            composed_log_entry = self.__composeLogEntry(description, owner, logbooks, tags, attachments, id)
+            try:
+                self.__ologClient.log(composed_log_entry)
+                self.__bufferedProperties = list()
+            except:
+                raise
 
     def __composeLogEntry(self, text, owner, logbooks, tags=[], attachments=[], id=None):
         """
@@ -559,6 +583,7 @@ class EpicsLogger():
 
     def __loggingTime(self, id, createTime, modifyTime):
         """
+        Obsolete for now.
         This routine is implemented with logging time for local logging only.\
         Remote Olog logging uses json time stamping methods passed from MySQL db
         """
@@ -634,11 +659,11 @@ class EpicsLogger():
                                property=kwds['property'],
                                tag=kwds['tag'])
         elif len(search_params) == 4 and 'logbook' in search_params and 'property' in search_params and 'attribute' in search_params and 'value' in search_params:
-            result = self.find(**{kwds['property'] + '.'+kwds['attribute']: kwds['value'], 'logbook': kwds['logbook']})
+            result = self.find(**{kwds['property'] + '.'+kwds['attribute']: str(kwds['value']), 'logbook': kwds['logbook']})
         elif len(search_params) == 4 and 'tag' in search_params and 'property' in search_params and 'attribute' in search_params and 'value' in search_params:
-            result = self.find(**{kwds['property'] + '.'+kwds['attribute']: kwds['value'], 'tag': kwds['tag']})
-        elif len(search_params) == 4 and 'description' in search_params and 'property' in search_params and 'attribute' in search_params and 'value' in search_params:
-            result = self.find(**{kwds['property'] + '.'+kwds['attribute']: kwds['value'], 'text': kwds['description']})
+            result = self.find(**{kwds['property'] + '.'+kwds['attribute']: str(kwds['value']), 'tag': kwds['tag']})
+        elif len(search_params) == 4 and 'description' in search_params and 'pro perty' in search_params and 'attribute' in search_params and 'value' in search_params:
+            result = self.find(**{kwds['property'] + '.'+kwds['attribute']: str(kwds['value']), 'text': kwds['description']})
         elif len(search_params) == 4 and 'attachment' in search_params and 'property' in search_params and 'attribute' in search_params and 'value' in search_params:
             result = self.find(**{str(kwds['property']) + '.'+str(kwds['attribute']): str(kwds['value']), 'attachment': kwds['attachment']})
         else:

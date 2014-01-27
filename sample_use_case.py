@@ -36,9 +36,11 @@ client.createProperty('sweep',{'id':None,
                                'spec_align_x':None,
                                'spec_align_y':None})
 client.capture('sweep', x_roi='some roi')
-client.log(description="Entered directory for John Skinner's code", owner='skinner', logbooks=["skinner's logbook"])
+client.log(description="Entered directory for John Skinner's code", logbooks=["skinner's logbook"])
 log_objects = client.findLog(property='sweep', attribute='y_roi', value="35")
 client.capture('sweep', x_roi='11', y_roi='35')
 client.log(description="Addition to use case", owner='arkilic', logbooks=["skinner's logbook"])
-print client.findLog(property='sweep', attribute='x_roi', value='35')
-print client.findLog(property='sweep', attribute='x_roi', value='5')[0].getProperties()[0].getAttributeValue('x_roi')
+log_object = client.findLog(property='sweep', attribute='x_roi', value='35')[-1]
+prop = log_object.getProperties()
+print prop[0].getAttributeNames()
+print client.retrieveMultipleAttributeValues(prop[0],['x_roi', 'y_roi', 'directory'])
