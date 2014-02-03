@@ -39,11 +39,11 @@ class EpicsLogger():
         self.__pythonLogger = None
         self.__logMode = 'remote'
 
-    def setLogMode(self,mode):
-        '''
+    def setLogMode(self, mode):
+        """
         Logging is possible both locally(via writing into a log file in a systematic fashion or remote olog server
         Modes: 'local' OR 'remote'
-        '''
+        """
         if mode == 'local' or mode == 'remote':
             self.__logMode = mode
         else:

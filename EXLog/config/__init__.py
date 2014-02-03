@@ -1,1 +1,1 @@
-__author__ = 'arkilic'
+from configParser import *

@@ -1,1 +1,3 @@
-__author__ = 'arkilic'
+from config import *
+from epicsLogger import *
+
