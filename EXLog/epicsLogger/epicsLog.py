@@ -629,6 +629,8 @@ class EpicsLogger():
             result = self.__find(tag=kwds['tag'])
         elif len(search_params) == 1 and 'property' in search_params:
             result = self.__find(property=kwds['property'])
+        elif len(search_params) == 1 and 'logbook' in search_params:
+            result = self.__find(logbook=kwds['logbook'])
         elif len(search_params) == 1 and 'attribute' in search_params:
             result = self.__find(attribute=kwds['attribute'])
         elif len(search_params) == 1 and 'attachment' in search_params:
