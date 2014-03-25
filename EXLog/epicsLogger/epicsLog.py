@@ -175,11 +175,11 @@ class EpicsLogger():
 
         >>> __find(start=str(time.time() - 3600)
         find the log entries made in the last hour
-        >>> find(start=123243434, end=123244434)
+        >>> __find(start=123243434, end=123244434)
         find all the log entries made between the epoc times 123243434 and 123244434
 
         Searching using multiple criteria
-        >>> find(logbook='contorls', tag='magnets')
+        >>> __find(logbook='contorls', tag='magnets')
         find all the log entries in logbook 'controls' AND with tag named 'magnets'
         """
         self.isOlog()
@@ -223,7 +223,9 @@ class EpicsLogger():
 
     def createLogbook(self,newLogbook,**kwargs):
         """
-        Creates an olog Logbook and adds this logbook name to existing logbook names.
+        Creates an olog Logbook and adds this logbook name to existing logbook names. createLogbook() appends names of /
+        already existing logbooks into self.__existingLogbooks attribute and this way keeps a local copy minimizing number/
+        of trips to the database.
         """
         self.isOlog()
         self.is_ologClient()
@@ -240,12 +242,16 @@ class EpicsLogger():
             self.__ologLogbook = Logbook(name=newLogbook, owner=self.__logbookOwner)
             try:
                 self.__ologClient.createLogbook(self.__ologLogbook)
-                # self.__existingLogbooks.append(self.__ologLogbook.getName())
+                self.__existingLogbooks.append(self.__ologLogbook.getName())
             except:
                 self.__pythonLogger.warning('Olog Logbook cannot be created')
                 raise
 
     def createMultipleLogbooks(self, logbookList, owner):
+        """
+        Allows user to create multiple logbooks. The owner of multiple logbooks must be the same.
+        """
+        #TODO: Make it possible to create multiple logbooks with different owners
         for entry in logbookList:
             self.createLogbook(newLogbook=entry, owner=owner)
 
@@ -279,7 +285,8 @@ class EpicsLogger():
     def __retrieveLogbookObject(self, name):
         #TODO: Add regular expressions for queries
         """
-        Returns a "Logbook Object" with given "Logbook Name".
+        Returns a "Logbook Object" with given "Logbook Name". This is useful in order to work on the actual Olog Data Type/
+        that provides deeper access to the api under EXLog.
         """
         logbook_objects = self.__ologClient.listLogbooks()
         queried_object = None
@@ -292,9 +299,9 @@ class EpicsLogger():
         return queried_object
 
     def __composeLogbookList(self):
-        '''
+        """
         Compose a list of Logbook objects on Olog Server.
-        '''
+        """
         logbookObjects = list()
         logbookNames = list()
         try:
@@ -302,6 +309,7 @@ class EpicsLogger():
             for entry in logbookObjects:
                 logbookNames.append(entry.getName())
         except:
+            self.__logLevel = 'local'
             self.__logLevel = 'local'
             print "Logging Mode:"
             self.__pythonLogger.warning('Olog logbooks cannot be accessed')
@@ -587,7 +595,7 @@ class EpicsLogger():
         if id is None:
             pass
         else:
-            log_entry = self.find(id=id)
+            log_entry = self.__find(id=id)
             if log_entry==[]:
                 raise ValueError('A log entry with specified ID does not exist')
 
@@ -604,14 +612,14 @@ class EpicsLogger():
             result['createTime'] = createTime
             result['modifyTime'] = None
         else:
-            existing_log = self.find(id=id)
+            existing_log = self.__find(id=id)
             result['createTime'] = int((existing_log[0].getCreateTime())/1000)
             if modifyTime is None:
                 modifyTime = int(calendar.timegm(time.gmtime()))
             result['modifyTime'] = modifyTime
         return result
 
-    def findLog(self, **kwds):
+    def find(self, **kwds):
         """
         Allows user to find a log entry
         """
