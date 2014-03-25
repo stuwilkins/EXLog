@@ -94,9 +94,17 @@ class EpicsLogger():
         self.__pythonLogger.setLevel(logging.INFO)
 
     def setOwner(self, owner):
+        """
+        Sets the owner of the experiment. This is read directly from the configuration file if/
+        epicsLogger.smartLog.createLogInstance() is used, However, one can change this on the fly if this changes during/
+        the experiement.
+        """
         self.__owner = owner
 
     def retrieveOwner(self):
+        """
+        Returns experiment owner name
+        """
         return self.__owner
 
     def __is_pyLogger(self):
@@ -114,6 +122,8 @@ class EpicsLogger():
     def createLocalLogger(self, name):
         """
         This will create a local logging instance where connection to an olog server is not available or preferred.
+        Not yet implemented. This is likely to call an external plugin where user defines their custom logging tools/
+        as in pyspec.
         """
         #TODO: create local methods for logging w/o Olog remote server. This must be in a fashion such that this saved
         #information is parsable in the future.
@@ -122,7 +132,7 @@ class EpicsLogger():
 
     def createOlogClient(self, name, url, username, password):
         """
-        Creates a local logger and Olog client. pythonLogger is a prerequisite for all logging. Once Olog client is \
+        Creates a local logger and Olog client. pythonLogger is a prerequisite for all logging. Once Olog client is/
         successfully created, existing properties, tags, and logbooks are saved locally.
         """
         self.isOlog()
@@ -149,27 +159,27 @@ class EpicsLogger():
         if self.retrieveOlogClient() is None:
             raise ValueError("Olog Client not created yet")
 
-    def find(self, **kwds):
+    def __find(self, **kwds):
         """
-        >>> find(search='*Timing*')
+        >>> __find(search='*Timing*')
         find logentries with the text Timing in the description
 
-        >>> find(tag='magnets')
+        >>> __find(tag='magnets')
         find log entries with the a tag named 'magnets'
 
-        >>> find(logbook='controls')
+        >>> __find(logbook='controls')
         find log entries in the logbook named 'controls'
 
-        >>> find(property='context')
+        >>> __find(property='context')
         find log entires with property named 'context'
 
-        >>> find(start=str(time.time() - 3600)
+        >>> __find(start=str(time.time() - 3600)
         find the log entries made in the last hour
-        >>> find(start=123243434, end=123244434)
+        >>> __find(start=123243434, end=123244434)
         find all the log entries made between the epoc times 123243434 and 123244434
 
         Searching using multiple criteria
-        >>> find(logbook='contorls', tag='magnets')
+        >>> __find(logbook='contorls', tag='magnets')
         find all the log entries in logbook 'controls' AND with tag named 'magnets'
         """
         self.isOlog()
@@ -213,7 +223,9 @@ class EpicsLogger():
 
     def createLogbook(self,newLogbook,**kwargs):
         """
-        Creates an olog Logbook and adds this logbook name to existing logbook names.
+        Creates an olog Logbook and adds this logbook name to existing logbook names. createLogbook() appends names of /
+        already existing logbooks into self.__existingLogbooks attribute and this way keeps a local copy minimizing number/
+        of trips to the database.
         """
         self.isOlog()
         self.is_ologClient()
@@ -230,12 +242,16 @@ class EpicsLogger():
             self.__ologLogbook = Logbook(name=newLogbook, owner=self.__logbookOwner)
             try:
                 self.__ologClient.createLogbook(self.__ologLogbook)
-                # self.__existingLogbooks.append(self.__ologLogbook.getName())
+                self.__existingLogbooks.append(self.__ologLogbook.getName())
             except:
                 self.__pythonLogger.warning('Olog Logbook cannot be created')
                 raise
 
     def createMultipleLogbooks(self, logbookList, owner):
+        """
+        Allows user to create multiple logbooks. The owner of multiple logbooks must be the same.
+        """
+        #TODO: Make it possible to create multiple logbooks with different owners
         for entry in logbookList:
             self.createLogbook(newLogbook=entry, owner=owner)
 
@@ -269,7 +285,8 @@ class EpicsLogger():
     def __retrieveLogbookObject(self, name):
         #TODO: Add regular expressions for queries
         """
-        Returns a "Logbook Object" with given "Logbook Name".
+        Returns a "Logbook Object" with given "Logbook Name". This is useful in order to work on the actual Olog Data Type/
+        that provides deeper access to the api under EXLog.
         """
         logbook_objects = self.__ologClient.listLogbooks()
         queried_object = None
@@ -282,9 +299,9 @@ class EpicsLogger():
         return queried_object
 
     def __composeLogbookList(self):
-        '''
+        """
         Compose a list of Logbook objects on Olog Server.
-        '''
+        """
         logbookObjects = list()
         logbookNames = list()
         try:
@@ -608,64 +625,64 @@ class EpicsLogger():
         #TODO: Add attachment log search. use value = ... case as in attribute values
         search_params = kwds.keys()
         if len(search_params) == 1 and 'tag' in search_params:
-            result = self.find(tag=kwds['tag'])
+            result = self.__find(tag=kwds['tag'])
         elif len(search_params) == 1 and 'property' in search_params:
-            result = self.find(property=kwds['property'])
+            result = self.__find(property=kwds['property'])
         elif len(search_params) == 1 and 'attribute' in search_params:
-            result = self.find(attribute=kwds['attribute'])
+            result = self.__find(attribute=kwds['attribute'])
         elif len(search_params) == 1 and 'attachment' in search_params:
-            result = self.find(attachment=kwds['attachment'])
+            result = self.__find(attachment=kwds['attachment'])
         elif len(search_params) == 1 and 'description' in search_params:
-            result = self.find(text=kwds['description'])
+            result = self.__find(text=kwds['description'])
         elif len(search_params) == 2 and 'property' in search_params and 'tag' in search_params:
-            result = self.find(property=kwds['property'],
+            result = self.__find(property=kwds['property'],
                                tag=kwds['tag'])
         elif len(search_params) == 2 and 'property' in search_params and 'attribute' in search_params:
-            result = self.find(property=kwds['property'],
+            result = self.__find(property=kwds['property'],
                                attribute=kwds['attribute'])
         elif len(search_params) == 2 and 'logbook' in search_params and 'tag' in search_params:
-            result = self.find(logbook=kwds['logbook'],
+            result = self.__find(logbook=kwds['logbook'],
                                tag=kwds['tag'])
         elif len(search_params) == 2 and 'logbook' in search_params and 'property' in search_params:
-            result = self.find(logbook=kwds['logbook'],
+            result = self.__find(logbook=kwds['logbook'],
                                property=kwds['property'])
         elif len(search_params) == 2 and 'logbook' in search_params and 'attachment' in search_params:
-            result = self.find(logbook=kwds['logbook'],
+            result = self.__find(logbook=kwds['logbook'],
                                attachment=kwds['attachment'])
         elif len(search_params) == 2 and 'logbook' in search_params and 'attribute' in search_params:
-            result = self.find(logbook=kwds['logbook'],
+            result = self.__find(logbook=kwds['logbook'],
                                attribute=kwds['attribute'])
         elif len(search_params) == 3 and 'logbook' in search_params and 'property' in search_params and 'attribute' in search_params:
-            result = self.find(logbook=kwds['logbook'],
+            result = self.__find(logbook=kwds['logbook'],
                                property=kwds['property'],
                                attribute=kwds['attribute'])
         elif len(search_params) == 3 and 'property' in search_params and 'attribute' in search_params and 'value' in search_params:
-            result = self.find(**{str(kwds['property']) + '.'+str(kwds['attribute']): str(kwds['value'])})
+            result = self.__find(**{str(kwds['property']) + '.'+str(kwds['attribute']): str(kwds['value'])})
         elif len(search_params) == 3 and 'logbook' in search_params and 'property' in search_params and 'tag' in search_params:
-            result = self.find(logbook=kwds['logbook'],
+            result = self.__find(logbook=kwds['logbook'],
                                property=kwds['property'],
                                tag=kwds['tag'])
         elif len(search_params) == 3 and 'logbook' in search_params and 'description' in search_params and 'tag' in search_params:
-            result = self.find(logbook=kwds['logbook'],
+            result = self.__find(logbook=kwds['logbook'],
                                text=kwds['description'],
                                tag=kwds['tag'])
         elif len(search_params) == 3 and 'logbook' in search_params and 'description' in search_params and 'property' in search_params:
-            result = self.find(logbook=kwds['logbook'],
+            result = self.__find(logbook=kwds['logbook'],
                                text=kwds['description'],
                                property=kwds['property'])
         elif len(search_params) == 4 and 'logbook' in search_params and 'description' in search_params and 'property' in search_params and 'tag' in search_params:
-            result = self.find(logbook=kwds['logbook'],
+            result = self.__find(logbook=kwds['logbook'],
                                text=kwds['description'],
                                property=kwds['property'],
                                tag=kwds['tag'])
         elif len(search_params) == 4 and 'logbook' in search_params and 'property' in search_params and 'attribute' in search_params and 'value' in search_params:
-            result = self.find(**{kwds['property'] + '.'+kwds['attribute']: str(kwds['value']), 'logbook': kwds['logbook']})
+            result = self.__find(**{kwds['property'] + '.'+kwds['attribute']: str(kwds['value']), 'logbook': kwds['logbook']})
         elif len(search_params) == 4 and 'tag' in search_params and 'property' in search_params and 'attribute' in search_params and 'value' in search_params:
-            result = self.find(**{kwds['property'] + '.'+kwds['attribute']: str(kwds['value']), 'tag': kwds['tag']})
+            result = self.__find(**{kwds['property'] + '.'+kwds['attribute']: str(kwds['value']), 'tag': kwds['tag']})
         elif len(search_params) == 4 and 'description' in search_params and 'pro perty' in search_params and 'attribute' in search_params and 'value' in search_params:
-            result = self.find(**{kwds['property'] + '.'+kwds['attribute']: str(kwds['value']), 'text': kwds['description']})
+            result = self.__find(**{kwds['property'] + '.'+kwds['attribute']: str(kwds['value']), 'text': kwds['description']})
         elif len(search_params) == 4 and 'attachment' in search_params and 'property' in search_params and 'attribute' in search_params and 'value' in search_params:
-            result = self.find(**{str(kwds['property']) + '.'+str(kwds['attribute']): str(kwds['value']), 'attachment': kwds['attachment']})
+            result = self.__find(**{str(kwds['property']) + '.'+str(kwds['attribute']): str(kwds['value']), 'attachment': kwds['attachment']})
         else:
             raise NotImplementedError('Log entry search for this case is not yet implemented')
         if result == []:
