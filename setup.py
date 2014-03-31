@@ -12,5 +12,5 @@ setup(name='EXLog',
       description='EPICS eXperimental Logging Library',
       author='Arman Arkilic',
       author_email='arkilic@bnl.gov',
-      packages=['EXLog','EXLog.config','EXLog.epicsLogger','EXLog.pyOlog']
-     )
+      packages=['EXLog','EXLog.config','EXLog.epicsLogger','EXLog.pyOlog',
+                'EXLog.channelFinder', 'EXLog.experimental'])
