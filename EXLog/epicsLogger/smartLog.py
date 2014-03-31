@@ -5,13 +5,13 @@ Created on Jan 13, 2014
 
 @author: Arman Arkilic
 """
+
 from EXLog.config.configParser import URL, USR, PSWD, MODE, LOGBOOKS, TAGS, PROPERTIES, OWNER, PROP_ATT_DICT
 from EXLog.epicsLogger.epicsLog import EpicsLogger
 
-
 def createLogInstance(name):
     """
-    Creates an Olog client, tags, logbooks, and properties specified by EXLog.conf.\
+    Creates an Olog client, tags, logbooks, and properties specified by EXLog.conf./
     A series of configuration sets are available. configParser loads the default configuration.
     """
     logInstance = EpicsLogger()
@@ -21,12 +21,12 @@ def createLogInstance(name):
         raise NotImplementedError("Local logging w/o remote Olog server will be implemented")
     else:
         logInstance.setLogMode(mode=MODE)
-        new_log_mode = logInstance.retrieveLogMode()
+        new_log_mode = logInstance.get_LogMode()
         if new_log_mode != 'remote':
             raise ValueError('Invalid Logging Mode[remote/local]')
         logInstance.createOlogClient(name, URL, USR, PSWD)
         logInstance.createMultipleLogbooks(LOGBOOKS, OWNER)
         logInstance.createMultipleTags(TAGS)
-        logInstance.createMultipleProperties(PROPERTIES, PROP_ATT_DICT)
+        logInstance.createMultipleProperties(PROP_ATT_DICT)
         return logInstance
-
+    

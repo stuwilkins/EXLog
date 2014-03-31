@@ -49,7 +49,7 @@ class EpicsLogger():
         else:
             raise ValueError("Invalid log mode")
         
-    def retrieveLogMode(self):
+    def get_LogMode(self):
         return self.__logMode
 
     def isOlog(self):
@@ -101,7 +101,7 @@ class EpicsLogger():
         """
         self.__owner = owner
 
-    def retrieveOwner(self):
+    def get_Owner(self):
         """
         Returns experiment owner name
         """
@@ -156,7 +156,7 @@ class EpicsLogger():
         Checks whether an OlogClient for EpicsLogger instance is created.
         """
         self.isOlog()
-        if self.retrieveOlogClient() is None:
+        if self.get_OlogClient() is None:
             raise ValueError("Olog Client not created yet")
 
     def __find(self, **kwds):
@@ -207,13 +207,13 @@ class EpicsLogger():
         self.__ologClient.delete(**kwds)
 
 
-    def retrieveOlogClient(self):
+    def get_OlogClient(self):
         """
         Returns OlogClient object created. Useful for calling native pyOlog routines
         Usage:
             >>> from pyOlog import Logbook, Attachments
             >>> epicsLoggerInstance = EpicesLogger()
-            >>> client = epicsLoggerInstance.retrieveOlogClient()
+            >>> client = epicsLoggerInstance.get_OlogClient()
             >>> sample_logbook = Logbook(name='sample logbook', owner= 'sample owner')
             >>> client.createLogbook(sample_logbook)
         **This is not recommended unless user is has a good understanding of epics logging tools and would like to add/debug pyOlogrs.**
@@ -233,10 +233,10 @@ class EpicsLogger():
         used_logbook = None
         if kwargs.has_key('owner'):
             self.__logbookOwner = kwargs['owner']
-        self.__existingLogbooks = self.retrieveLogbooks()
+        self.__existingLogbooks = self.get_Logbooks()
         if newLogbook in self.__existingLogbooks:
             self.__pythonLogger.info('Olog Logbook ' + str(newLogbook) + ' exists')
-            self.__ologLogbook = self.__retrieveLogbookObject(name=newLogbook)
+            self.__ologLogbook = self.__get_LogbookObject(name=newLogbook)
             return 'Olog Logbook ' + str(newLogbook) + ' exists'
         else:
             self.__ologLogbook = Logbook(name=newLogbook, owner=self.__logbookOwner)
@@ -255,7 +255,7 @@ class EpicsLogger():
         for entry in logbookList:
             self.createLogbook(newLogbook=entry, owner=owner)
 
-    def retrieveLogbooks(self):
+    def get_Logbooks(self):
         """
         Gets and assings "all active logbooks" to self._existingLogbooks
         Returns:  tuple(list of active logbooks)
@@ -275,14 +275,14 @@ class EpicsLogger():
         self.is_ologClient()
         self.__is_pyLogger()
         find_success = False
-        log_books = self.retrieveLogbooks()
+        log_books = self.get_Logbooks()
         if logBook in log_books:
             find_success = True
         else:
             raise ValueError('Queried Logbook does not exist')
         return find_success
 
-    def __retrieveLogbookObject(self, name):
+    def __get_LogbookObject(self, name):
         #TODO: Add regular expressions for queries
         """
         Returns a "Logbook Object" with given "Logbook Name". This is useful in order to work on the actual Olog Data Type/
@@ -334,7 +334,7 @@ class EpicsLogger():
             tag_list.append(entry.getName())
         if newTagName in tag_list:
             self.__pythonLogger.info('Olog Tag' + str(newTagName) + ' has already been created')
-            self.__ologTag = self.__retrieveTagObject(name=newTagName)
+            self.__ologTag = self.__get_TagObject(name=newTagName)
             return 'Olog Tag ' + str(newTagName) + ' has already been created'
         else:
             self.__ologTag = Tag(name=newTagName, state='Active')
@@ -349,7 +349,7 @@ class EpicsLogger():
         for entry in tagList:
             self.createTag(newTagName=entry)
 
-    def retrieveTags(self):
+    def get_Tags(self):
             '''
             Returns existing olog tag instances already created
             '''
@@ -367,7 +367,7 @@ class EpicsLogger():
         self.is_ologClient()
         self.__is_pyLogger()
         find_success = False
-        tag_list = self.retrieveTags()
+        tag_list = self.get_Tags()
         if tag in tag_list:
             find_success = True
         else:
@@ -375,7 +375,7 @@ class EpicsLogger():
             raise ValueError('Queried Tag does not exist')
         return find_success
         
-    def __retrieveTagObject(self,name):
+    def __get_TagObject(self,name):
         tag_objects = self.__ologClient.listTags()
         queried_object = None
         for entry in tag_objects:
@@ -404,7 +404,7 @@ class EpicsLogger():
         self.isOlog()
         self.is_ologClient()
         self.__is_pyLogger()
-        property_names = self.retrievePropertyNames()
+        property_names = self.get_PropertyNames()
         if propName in property_names:
             #Need to verify an attribute. Compose attribute dictionary. update values if they exist
             new_attributes = self.__composeAttributeDict(propName, attributes)
@@ -418,8 +418,14 @@ class EpicsLogger():
                 self.__pythonLogger.info('Remote Property can not be created')
                 raise
 
-    def createMultipleProperties(self, properties, prop_att_dict):
-        prop_names = properties
+    def createMultipleProperties(self,prop_att_dict):
+        """
+        Provides user a convenient way to create multiple properties. 
+        properties: List of property names
+        prop_att_dict: {property_name:[attribute_list], ...}
+        
+        """
+        prop_names = prop_att_dict.keys()
         attribute_dict = dict()
         for entry in prop_names:
             att_list = prop_att_dict[entry]
@@ -430,6 +436,17 @@ class EpicsLogger():
             except:
                 self.__pythonLogger.warning('Property cannot be created')
                 raise
+            
+    def __compose_default_attr_dict(self, attributes):
+        """
+        Returns a dictionary for user specified attributes for a given property:
+        attributes = [attribute1, attribute2,...]
+        Returns: {attribute1:None, attribute2:None,etc...}
+        """
+        default_attr_dict = dict()
+        for entry in attributes:
+            default_attr_dict[entry] = None
+        return default_attr_dict
 
     def __add2ExistingProperty(self, prop_name, attribute_dict):
         """
@@ -447,7 +464,7 @@ class EpicsLogger():
         """
         Checks whether an attribute exists for given property. Returns a dictionary of non-existing attributes
         """
-        property_object = self.__retrievePropertyObject(name=prop_name)
+        property_object = self.__get_PropertyObject(name=prop_name)
         existing_attributes = property_object.getAttributeNames()
         new_attribute_dict = dict()
         for entry in attributes:
@@ -457,14 +474,14 @@ class EpicsLogger():
                 new_attribute_dict[entry] = None
         return new_attribute_dict
 
-    def retrievePropertyNames(self):
+    def get_PropertyNames(self):
         self.isOlog()
         self.is_ologClient()
         self.__is_pyLogger()
         self.__existingProperties = self.__composePropertyDict()
         return self.__existingProperties.keys()
 
-    def retrievePropertyWithAttributes(self):
+    def get_PropertyWithAttributes(self):
         self.is_ologClient()
         self.is_ologClient()
         self.__is_pyLogger()
@@ -475,14 +492,14 @@ class EpicsLogger():
         self.is_ologClient()
         self.__is_pyLogger()
         find_success = False
-        properties = self.retrievePropertyNames()
+        properties = self.get_PropertyNames()
         if property in properties:
             find_success = True
         else:
             raise ValueError('Queried Property does not exist')
         return find_success
 
-    def retrieveAttributeValues(self, property_object, attName):
+    def get_AttributeValues(self, property_object, attName):
         """
         Given a Property object and attribute name, this routine returns the associated attribute value./
         Useful for consuming log entries found as a result of queries
@@ -503,17 +520,17 @@ class EpicsLogger():
             raise ValueError('Attribute for given property does not exist.')
         return value
 
-    def retrieveMultipleAttributeValues(self, property_object, attList):
+    def get_MultipleAttributeValues(self, property_object, attList):
         """
         Given a Property object and a list of attribute names of this property, this routine provides attribute values
         """
         value_dict = dict()
         for entry in attList:
-            val = self.retrieveAttributeValues(property_object=property_object, attName=entry)
+            val = self.get_AttributeValues(property_object=property_object, attName=entry)
             value_dict[entry] = val
         return value_dict
 
-    def __retrievePropertyObject(self, name):
+    def __get_PropertyObject(self, name):
         queried_prop = None
         property_objects = self.__ologClient.listProperties()
         for entry in property_objects:
@@ -534,7 +551,7 @@ class EpicsLogger():
     def capture(self, propname, **kwds):
         attributeDict = kwds
         tba_att = dict()
-        existing_prop_att = self.retrievePropertyWithAttributes()
+        existing_prop_att = self.get_PropertyWithAttributes()
         new_att_names = attributeDict.keys()
         existing_prop_names = existing_prop_att.keys()
         if propname in existing_prop_names:
@@ -559,7 +576,7 @@ class EpicsLogger():
         """
         Provides user a way to create a log entry using the configuration parameters
         """
-        owner = self.retrieveOwner()
+        owner = self.get_Owner()
         if owner is None:
             raise ValueError('Please specify an owner for this log entry')
         else:
@@ -581,10 +598,10 @@ class EpicsLogger():
         self.__verifyLogId(id)
         for entry in logbooks:
             if self.queryLogbook(logBook=entry):
-                logbookList.append(self.__retrieveLogbookObject(name=entry))
+                logbookList.append(self.__get_LogbookObject(name=entry))
         for entry in tags:
             if self.queryTags(tag=entry):
-                tagList.append(self.__retrieveTagObject(name=entry))
+                tagList.append(self.__get_TagObject(name=entry))
         for entry in attachments:
             attachmentList.append(Attachment(file=entry))
         logEntry = LogEntry(text=text, owner=owner, logbooks=logbookList, tags=tagList,
