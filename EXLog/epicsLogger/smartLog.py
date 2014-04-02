@@ -29,4 +29,5 @@ def createLogInstance(name):
         logInstance.createMultipleTags(TAGS)
         logInstance.createMultipleProperties(PROP_ATT_DICT)
         return logInstance
-    
+
+

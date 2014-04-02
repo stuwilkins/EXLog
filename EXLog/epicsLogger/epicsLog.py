@@ -15,6 +15,7 @@ from EXLog.pyOlog.OlogDataTypes import Attachment, Logbook, LogEntry, Property, 
 #TODO: Keep track of existing property inside a dictionary that as an attribute to class instance. append the newly created entries. This reduces the number of trips to the database
 #TODO: Add regular expressions to queries.
 #TODO: Ensure the same attribute is not buffered multiple times before a flush
+#TODO: Instead of simply appending attributes to an existing property, provide update(). Avoids conflicts due to naming
 class EpicsLogger():
     """
     classdocs
