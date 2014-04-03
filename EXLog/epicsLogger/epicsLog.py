@@ -411,7 +411,8 @@ class EpicsLogger():
             new_attributes = self.__composeAttributeDict(propName, attributes)
             self.__add2ExistingProperty(propName, new_attributes)
         else:
-            prop = Property(name=propName,attributes=attributes)
+            composed_attributes = self.__compose_default_attr_dict(attributes)
+            prop = Property(name=propName,attributes=composed_attributes)
             try:
                 self.__ologClient.createProperty(prop)
                 self.__ologProperty = prop
@@ -424,7 +425,6 @@ class EpicsLogger():
         Provides user a convenient way to create multiple properties. 
         properties: List of property names
         prop_att_dict: {property_name:[attribute_list], ...}
-        
         """
         prop_names = prop_att_dict.keys()
         attribute_dict = dict()

@@ -13,6 +13,6 @@ from EXLog.pyOlog.OlogDataTypes import *
 def get_logType():
     """
     Determines the type of log entry based on property.Entries will be parseable iff they are among predefined/
-    property types: scan(for defined types), setup, hardware
+    property types: s(for defined types), setup, hardware
     """
     pass

@@ -1,6 +1,6 @@
 __author__ = 'arkilic'
 from EXLog.epicsLogger.smartLog import createLogInstance
-from EXLog.instrumentControl.scan.fourc.ascan import ascan
+from EXLog.properties.s.fourc.ascan import ascan
 
 
 # client = createLogInstance('trial')
