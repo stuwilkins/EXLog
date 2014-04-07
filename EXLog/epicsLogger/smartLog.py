@@ -5,7 +5,6 @@ Created on Jan 13, 2014
 
 @author: Arman Arkilic
 """
-
 from EXLog.config.configParser import URL, USR, PSWD, MODE, LOGBOOKS, TAGS, PROPERTIES, OWNER, PROP_ATT_DICT
 from EXLog.epicsLogger.epicsLog import EpicsLogger
 
@@ -29,5 +28,3 @@ def createLogInstance(name):
         logInstance.createMultipleTags(TAGS)
         logInstance.createMultipleProperties(PROP_ATT_DICT)
         return logInstance
-
-

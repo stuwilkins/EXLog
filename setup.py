@@ -1,6 +1,7 @@
 '''
+Copyright (c) 2014 Brookhaven National Laboratory
+All rights reserved. Use is subject to license terms and conditions.
 Created on Dec 9, 2013
-
 @author: arkilic
 '''
 from distutils.core import setup
@@ -12,4 +13,5 @@ setup(name='EXLog',
       description='EPICS eXperimental Logging Library',
       author='Arman Arkilic',
       author_email='arkilic@bnl.gov',
-      packages=['EXLog','EXLog.config','EXLog.epicsLogger','EXLog.pyOlog'])
+      packages=['EXLog','EXLog.config','EXLog.epicsLogger','EXLog.pyOlog',
+                'EXLog.properties','dummyBroker','EXLog.channelFinder','EXLog.propertyDepot'])

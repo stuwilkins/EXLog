@@ -1,3 +1,10 @@
+"""
+Copyright (c) 2014 Brookhaven National Laboratory
+All rights reserved. Use is subject to license terms and conditions.
+Created on April 3, 2014
+
+@author: Arman Arkilic
+"""
 __author__ = 'arkilic'
 from EXLog.epicsLogger.smartLog import createLogInstance
 from EXLog.propertyDepot.scans import *
@@ -9,9 +16,9 @@ class Broker():
     of configuration files will be read using Broker's parser. (Maybe pass all configuration to this module?)
 
     """
-    def __init__(self, client_name):
+    def __init__(self, session_name):
         try:
-            self.exlog_client = createLogInstance(client_name)
+            self.exlog_client = createLogInstance(session_name)
         except:
             raise
         #Channelfinder client (if any) goes here
@@ -45,14 +52,14 @@ class Broker():
 
 
 
-scan = Broker('arman')
+# scan = Broker('arman')
 
-scan.create_property(['ascan'])
+# scan.create_property(['ascan'])
 
 # scan.exlog_client.createProperty('arman33',['scan_id', 'start_timestamp', 'end_timestamp', 'descriptor', 'start', 'final', 'interval', 'descriptor', 'geometry'])
 # print scan.exlog_client.get_PropertyWithAttributes()['arman33']
-
-scan.capture('ascan',scan_id=0)
-scan.capture('ascan',scan_id=1)
-scan.get_captured()
-scan.log(description='first log attempt using dummyBroker',logbooks=['CSX'])
+#
+# scan.capture('ascan',scan_id=0)
+# scan.capture('ascan',scan_id=1)
+# scan.get_captured()
+# scan.log(description='first log attempt using dummyBroker',logbooks=['CSX'])
