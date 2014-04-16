@@ -32,6 +32,7 @@ class EpicsLogger():
         self.__bufferedProperties = list()
         self.__existingAttributes = dict()
         self.__existingLogbooks = list()
+        self.__existingLogbookObjects = list()
         self.__existingTags = list()
         self.__ologEntry = None
         self.__name = None
@@ -162,26 +163,7 @@ class EpicsLogger():
 
     def __find(self, **kwds):
         """
-        >>> __find(search='*Timing*')
-        find logentries with the text Timing in the description
-
-        >>> __find(tag='magnets')
-        find log entries with the a tag named 'magnets'
-
-        >>> __find(logbook='controls')
-        find log entries in the logbook named 'controls'
-
-        >>> __find(property='context')
-        find log entires with property named 'context'
-
-        >>> __find(start=str(time.time() - 3600)
-        find the log entries made in the last hour
-        >>> __find(start=123243434, end=123244434)
-        find all the log entries made between the epoc times 123243434 and 123244434
-
-        Searching using multiple criteria
-        >>> __find(logbook='contorls', tag='magnets')
-        find all the log entries in logbook 'controls' AND with tag named 'magnets'
+        Native pyOlog routine to find all the log entries in logbook 'controls' AND with tag named 'magnets'
         """
         self.isOlog()
         self.is_ologClient()
@@ -217,7 +199,6 @@ class EpicsLogger():
             >>> client = epicsLoggerInstance.get_OlogClient()
             >>> sample_logbook = Logbook(name='sample logbook', owner= 'sample owner')
             >>> client.createLogbook(sample_logbook)
-        **This is not recommended unless user is has a good understanding of epics logging tools and would like to add/debug pyOlogrs.**
         """
         self.isOlog()
         return self.__ologClient
@@ -289,7 +270,11 @@ class EpicsLogger():
         Returns a "Logbook Object" with given "Logbook Name". This is useful in order to work on the actual Olog Data Type/
         that provides deeper access to the api under EXLog.
         """
-        logbook_objects = self.__ologClient.listLogbooks()
+        if any(self.__existingLogbookObjects):
+            logbook_objects = self.__existingLogbookObjects
+        else:
+            self.__existingLogbookObjects = self.__ologClient.listLogbooks()
+            logbook_objects = self.__existingLogbookObjects
         queried_object = None
         for entry in logbook_objects:
             if name == entry.getName():
@@ -303,19 +288,20 @@ class EpicsLogger():
         """
         Compose a list of Logbook objects on Olog Server.
         """
-        logbookObjects = list()
         logbookNames = list()
-        try:
-            logbookObjects = self.__ologClient.listLogbooks()
-            for entry in logbookObjects:
-                logbookNames.append(entry.getName())
-        except:
-            self.__logLevel = 'local'
-            self.__logLevel = 'local'
-            print "Logging Mode:"
-            self.__pythonLogger.warning('Olog logbooks cannot be accessed')
-            raise
-        self.__existingLogbooks = logbookNames
+        if any(self.__existingLogbooks):
+            logbookNames = self.__existingLogbooks
+        else:
+            try:
+                logbookObjects = self.__ologClient.listLogbooks()
+                for entry in logbookObjects:
+                    logbookNames.append(entry.getName())
+                self.__existingLogbooks = logbookNames
+            except:
+                self.__logLevel = 'local'
+                print "Logging Mode:"
+                self.__pythonLogger.warning('Olog logbooks cannot be accessed')
+                raise
         return logbookNames
 
     def createTag(self, newTagName):
@@ -372,7 +358,6 @@ class EpicsLogger():
         if tag in tag_list:
             find_success = True
         else:
-            print 'Queried Tag does not exist'
             raise ValueError('Queried Tag does not exist')
         return find_success
         
@@ -389,13 +374,15 @@ class EpicsLogger():
     
     def __composeTagList(self):
         tag_names = list()
-        try:
-            tag_objects = self.__ologClient.listTags()
-            for entry in tag_objects:
-                tag_names.append(entry.getName())
-        except:
-            raise
-        self.__existingTags = tag_names
+        if self.__existingTags is None:
+            try:
+                tag_objects = self.__ologClient.listTags()
+                for entry in tag_objects:
+                    tag_names.append(entry.getName())
+            except:
+                raise
+        else:
+            tag_names = self.__existingTags
         return tag_names
     
     def createProperty(self, propName, attributes):
@@ -408,7 +395,8 @@ class EpicsLogger():
         property_names = self.get_PropertyNames()
         if propName in property_names:
             #Need to verify an attribute. Compose attribute dictionary. update values if they exist
-            new_attributes = self.__composeAttributeDict(propName, attributes)
+            composed_attributes = self.__compose_default_attr_dict(attributes)
+            new_attributes = self.__composeAttributeDict(propName, composed_attributes)
             self.__add2ExistingProperty(propName, new_attributes)
         else:
             composed_attributes = self.__compose_default_attr_dict(attributes)
@@ -544,9 +532,12 @@ class EpicsLogger():
 
     def __composePropertyDict(self):
         property_dict = dict()
-        property_objects = self.__ologClient.listProperties()
-        for entry in property_objects:
-            property_dict[entry.getName()] = entry.getAttributeNames()
+        if any(self.__existingProperties):
+            property_dict = self.__existingProperties
+        else:
+            property_objects = self.__ologClient.listProperties()
+            for entry in property_objects:
+                property_dict[entry.getName()] = entry.getAttributeNames()
         return property_dict
 
     def capture(self, propname, **kwds):
