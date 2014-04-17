@@ -129,8 +129,17 @@ class EpicsLogger():
         """
         #TODO: create local methods for logging w/o Olog remote server. This must be in a fashion such that this saved
         #information is parsable in the future.
-        raise NotImplementedError("Local logging must have similar characteristics with remote olog logging. A set of logbooks, "
-                                  "tags, and clients have to be generated.")
+        raise NotImplementedError("Local logging must have similar characteristics with remote olog logging."
+                                  " A set of logbooks, tags, and clients have to be generated.")
+
+    def populate(self):
+        """
+        Creates a local cache for logbooks, properties, and tags.
+        """
+        self.get_Logbooks()
+        self.get_Tags()
+        self.get_PropertyNames()
+
 
     def createOlogClient(self, name, url, username, password):
         """
@@ -298,8 +307,6 @@ class EpicsLogger():
                     logbookNames.append(entry.getName())
                 self.__existingLogbooks = logbookNames
             except:
-                self.__logLevel = 'local'
-                print "Logging Mode:"
                 self.__pythonLogger.warning('Olog logbooks cannot be accessed')
                 raise
         return logbookNames
@@ -337,9 +344,9 @@ class EpicsLogger():
             self.createTag(newTagName=entry)
 
     def get_Tags(self):
-            '''
+            """
             Returns existing olog tag instances already created
-            '''
+            """
             self.isOlog()
             self.is_ologClient()
             self.__is_pyLogger()
@@ -556,7 +563,19 @@ class EpicsLogger():
         else:
             raise ValueError('Property does not exist. Please create a property before capture()')
         prop = Property(propname, tba_att)
-        self.__bufferedProperties.append(prop)
+        if propname in self.__bufferedProperties:
+            raise ValueError('Only one instance of a property can be logged in a single entry')
+        else:
+            self.__bufferedProperties.append(prop)
+
+    def __buffer_log(self):
+        """
+        will be used as means to buffer created log entries. dump routine below will be used to dump logs in a
+        seemless fashion (use threads to parallelize??)
+        """
+
+        pass
+
 
     def get_buffered_properties(self):
         return self.__bufferedProperties
