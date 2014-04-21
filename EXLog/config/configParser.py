@@ -5,7 +5,9 @@ Created on Jan 13, 2014
 
 @author: Arman Arkilic
 """
+from twisted.internet.tcp import _AbortingMixin
 from EXLog.config._conf import _conf
+
 
 def compose_configuration_params(configs, config_key):
     """
@@ -49,6 +51,7 @@ def __configEncoder(config_name, config_dict):
         raise
     return config_params
 
+
 def __verify_config_params(config):
     """
     Verifies the configuration parameters
@@ -56,6 +59,7 @@ def __verify_config_params(config):
     required_keys = ['url', 'user', 'password', 'logging_mode', 'logbooks', 'tags', 'properties', 'log_owner']
     keys = config
     __verify_required_fields(keys, required_keys)
+
 
 def __verify_required_fields(keys, required_key_values):
     for entry in keys:
@@ -65,14 +69,28 @@ def __verify_required_fields(keys, required_key_values):
         if entry not in keys:
             raise ValueError('Configuration file is required to have ' + str(entry) + ' field')
 
+
 def extractMultiple(temp_item):
     return temp_item.split(', ')
+
 
 def composePropAttDict(properties):
     temp_dict = dict()
     for entry in properties:
         temp_dict[entry] = _conf.get('attributes', entry).split(', ')
     return temp_dict
+
+
+def save_id(id):
+    """
+    Saves the latests scan_id into header
+    """
+    _conf.set('run_header', 'id', id)
+
+
+def restore_id():
+    return _conf.get('run_header', 'id')
+
 
 configs = _conf.items('configs')
 params = compose_configuration_params(configs,'config0')
@@ -85,3 +103,10 @@ OWNER = params['log_owner']
 TAGS = extractMultiple(params['tags'])
 PROPERTIES = extractMultiple(params['properties'])
 PROP_ATT_DICT = composePropAttDict(PROPERTIES)
+
+run_id = restore_id()
+run_id
+save_id('1903AY')
+restore_id()
+with open('/home/arkilic/EXlog.conf', 'w') as configfile:
+    _conf.write(configfile)

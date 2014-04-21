@@ -14,4 +14,4 @@ setup(name='EXLog',
       author='Arman Arkilic',
       author_email='arkilic@bnl.gov',
       packages=['EXLog','EXLog.config','EXLog.epicsLogger','EXLog.pyOlog',
-                'EXLog.properties','dummyBroker','EXLog.channelFinder','EXLog.propertyDepot'])
+                'EXLog.properties','dummyBroker','EXLog.channelFinder','EXLog.propertyDepot', 'EXLog.EXLogAPI'])
