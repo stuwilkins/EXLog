@@ -25,6 +25,7 @@ def createLogInstance(name):
         if new_log_mode != 'remote':
             raise ValueError('Invalid Logging Mode[remote/local]')
         logInstance.createOlogClient(name, URL, USR, PSWD)
+        logInstance.populate()
         # logInstance.createMultipleLogbooks(LOGBOOKS, OWNER)
         # logInstance.createMultipleTags(TAGS)
         # logInstance.createMultipleProperties(PROP_ATT_DICT)
