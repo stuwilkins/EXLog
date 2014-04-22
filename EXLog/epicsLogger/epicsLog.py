@@ -381,15 +381,15 @@ class EpicsLogger():
     
     def __composeTagList(self):
         tag_names = list()
-        if self.__existingTags is None:
+        if any(self.__existingTags):
+            tag_names = self.__existingTags
+        else:
             try:
                 tag_objects = self.__ologClient.listTags()
                 for entry in tag_objects:
                     tag_names.append(entry.getName())
             except:
                 raise
-        else:
-            tag_names = self.__existingTags
         return tag_names
     
     def createProperty(self, propName, attributes):
@@ -400,7 +400,9 @@ class EpicsLogger():
         self.is_ologClient()
         self.__is_pyLogger()
         property_names = self.get_PropertyNames()
+        return_status = False
         if propName in property_names:
+            return_status = True
             #Need to verify an attribute. Compose attribute dictionary. update values if they exist
             composed_attributes = self.__compose_default_attr_dict(attributes)
             new_attributes = self.__composeAttributeDict(propName, composed_attributes)
@@ -411,9 +413,13 @@ class EpicsLogger():
             try:
                 self.__ologClient.createProperty(prop)
                 self.__ologProperty = prop
+                return_status = True
             except:
                 self.__pythonLogger.info('Remote Property can not be created')
                 raise
+            if return_status:
+                self.__existingProperties[propName] = attributes
+        return return_status
 
     def createMultipleProperties(self,prop_att_dict):
         """
