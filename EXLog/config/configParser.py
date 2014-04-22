@@ -103,9 +103,9 @@ TAGS = extractMultiple(params['tags'])
 PROPERTIES = extractMultiple(params['properties'])
 PROP_ATT_DICT = composePropAttDict(PROPERTIES)
 
-run_id = restore_id()
-run_id
-save_id('1903AY')
-restore_id()
-with open('/home/arkilic/EXlog.conf', 'w') as configfile:
-    _conf.write(configfile)
+#run_id = restore_id()
+#run_id
+#save_id('1903AY')
+#restore_id()
+#with open('/home/arkilic/EXlog.conf', 'w') as configfile:
+#    _conf.write(configfile)

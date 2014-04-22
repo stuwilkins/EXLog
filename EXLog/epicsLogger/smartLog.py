@@ -5,7 +5,6 @@ Created on Jan 13, 2014
 
 @author: Arman Arkilic
 """
-from ORBit import THREAD_HINT_ALL_AT_IDLE
 from EXLog.config.configParser import URL, USR, PSWD, MODE, LOGBOOKS, TAGS, PROPERTIES, OWNER, PROP_ATT_DICT
 from EXLog.epicsLogger.epicsLog import EpicsLogger
 
