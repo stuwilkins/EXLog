@@ -5,7 +5,7 @@ Created on Dec 11, 2013
 '''
 # from pyOlog._conf import _conf
 from EXLog.config.configParser import URL, USR, PSWD
-from epicsLogger.epicsLog import EpicsLogger
+from EXLog.epicsLogger.epicsLog import EpicsLogger
 from random import random
 import unittest
 import requests

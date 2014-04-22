@@ -10,7 +10,7 @@ import logging
 from os import path
 import time
 import calendar
-from pyOlog import OlogClient
+from pyOlog.OlogClient import OlogClient
 from pyOlog.OlogDataTypes import Attachment, Logbook, LogEntry, Property, Tag
 #TODO: Keep track of existing property inside a dictionary that as an attribute to class instance. append the newly/
 # created entries. This reduces the number of trips to the database
