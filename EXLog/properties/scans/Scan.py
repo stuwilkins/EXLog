@@ -1,3 +1,10 @@
+"""
+Copyright (c) 2014 Brookhaven National Laboratory
+All rights reserved. Use is subject to license terms and conditions.
+Created on April 3, 2014
+
+@author: Arman Arkilic
+"""
 __author__ = 'arkilic'
 
 class Scan():
